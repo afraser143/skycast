@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}Skycast{% endblock %}</title>
+  <meta name="description" content="A daily horoscope from your real birth chart and your local weather.">
+  <meta name="theme-color" content="#f6f1ea" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1024" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Skycast">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="page {% if tab %}has-tabs{% endif %}">
+    {% block content %}{% endblock %}
+  </main>
+  {% if tab %}
+  <nav class="tabs" aria-label="Sections">
+    <a href="/" {% if tab == "today" %}aria-current="page"{% endif %}><span aria-hidden="true">☼</span>Today</a>
+    <a href="/chart" {% if tab == "chart" %}aria-current="page"{% endif %}><span aria-hidden="true">◎</span>Chart</a>
+    <a href="/history" {% if tab == "history" %}aria-current="page"{% endif %}><span aria-hidden="true">☾</span>History</a>
+  </nav>
+  {% endif %}
+</body>
+</html>

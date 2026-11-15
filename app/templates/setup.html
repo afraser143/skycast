@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Set up · Skycast{% endblock %}
+{% block content %}
+<header class="page-head">
+  {% if profile %}<a href="/chart" class="back">← Chart</a>{% endif %}
+  <h1 class="display">{% if profile %}Edit details{% else %}Welcome{% endif %}</h1>
+  <p class="muted">Your birth details build your chart. Your home city sets the weather. They stay in your own database and are never sent to the AI.</p>
+</header>
+<form method="post" action="/setup" class="card stack">
+  <div class="row">
+    <label class="field">Birth date
+      <input type="date" name="birth_date" required value="{{ form.birth_date or (profile.birth_local[:10] if profile else '') }}">
+    </label>
+    <label class="field">Birth time
+      <input type="time" name="birth_time" required value="{{ form.birth_time or (profile.birth_local[11:16] if profile else '') }}">
+    </label>
+  </div>
+  <label class="field">Birth place
+    <input name="birth_place" required placeholder="City, state or country" value="{{ form.birth_place or (profile.birth_label if profile else '') }}">
+  </label>
+  <label class="field">Home city <span class="hint">for your daily weather</span>
+    <input name="home_city" required placeholder="City" value="{{ form.home_city or (profile.home_label if profile else '') }}">
+  </label>
+  {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+  <button class="btn">Find places</button>
+  {% if profile %}<p class="hint">Saving new details starts your reading history fresh, since past readings were for the old chart.</p>{% endif %}
+</form>
+{% endblock %}

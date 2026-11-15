@@ -1,0 +1,184 @@
+{
+ "results": [
+  {
+   "name": "Springfield",
+   "latitude": 37.21533,
+   "longitude": -93.29824,
+   "timezone": "America/Chicago",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Missouri"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 39.80172,
+   "longitude": -89.64371,
+   "timezone": "America/Chicago",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Illinois"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 42.10148,
+   "longitude": -72.58981,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Massachusetts"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 39.92423,
+   "longitude": -83.80882,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Ohio"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 36.50921,
+   "longitude": -86.885,
+   "timezone": "America/Chicago",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Tennessee"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 37.68534,
+   "longitude": -85.22218,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Kentucky"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 32.37241,
+   "longitude": -81.3115,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Georgia"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 37.40835,
+   "longitude": -102.61436,
+   "timezone": "America/Denver",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Colorado"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 44.04624,
+   "longitude": -123.02203,
+   "timezone": "America/Los_Angeles",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Oregon"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 38.78928,
+   "longitude": -77.1872,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Virginia"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 39.93067,
+   "longitude": -75.32019,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Pennsylvania"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 40.70491,
+   "longitude": -74.31723,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "New Jersey"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 43.29841,
+   "longitude": -72.48231,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Vermont"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 44.23885,
+   "longitude": -94.97582,
+   "timezone": "America/Chicago",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Minnesota"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 42.85417,
+   "longitude": -97.89729,
+   "timezone": "America/Chicago",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "South Dakota"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 41.08194,
+   "longitude": -96.13446,
+   "timezone": "America/Chicago",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Nebraska"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 43.49507,
+   "longitude": -72.03342,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "New Hampshire"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 33.49682,
+   "longitude": -81.27927,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "South Carolina"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 30.42908,
+   "longitude": -90.5487,
+   "timezone": "America/Chicago",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Louisiana"
+  },
+  {
+   "name": "Springfield",
+   "latitude": 39.45065,
+   "longitude": -78.69363,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "West Virginia"
+  }
+ ]
+}

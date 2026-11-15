@@ -1,0 +1,31 @@
+{
+ "results": [
+  {
+   "name": "Austin",
+   "latitude": 30.26715,
+   "longitude": -97.74306,
+   "timezone": "America/Chicago",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Texas"
+  },
+  {
+   "name": "Austin",
+   "latitude": 43.66663,
+   "longitude": -92.97464,
+   "timezone": "America/Chicago",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Minnesota"
+  },
+  {
+   "name": "Austin",
+   "latitude": 38.75839,
+   "longitude": -85.80803,
+   "timezone": "America/Indiana/Indianapolis",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Indiana"
+  }
+ ]
+}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Chart · Skycast{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1 class="display">Your chart</h1>
+  <p class="muted">{{ born.strftime("%B %-d, %Y · %-I:%M %p") }} · {{ profile.birth_label }}</p>
+</header>
+
+<div class="big-three">
+  <div class="card"><span class="label">Sun</span><span class="value">{{ chart.big_three.sun }}</span></div>
+  <div class="card"><span class="label">Moon</span><span class="value">{{ chart.big_three.moon }}</span></div>
+  <div class="card"><span class="label">Rising</span><span class="value">{{ chart.big_three.rising }}</span></div>
+</div>
+
+<figure class="card wheel-card">{{ wheel|safe }}</figure>
+
+<section class="card">
+  <h2 class="section-title">Placements</h2>
+  <table class="placements">
+    <thead><tr><th scope="col">Planet</th><th scope="col">Position</th><th scope="col">House</th></tr></thead>
+    <tbody>
+      {% for p in chart.placements %}
+      <tr>
+        <th scope="row"><span class="glyph" aria-hidden="true">{{ p.glyph }}</span> {{ p.name }}</th>
+        <td>{{ p.position }}{% if p.retrograde %} <abbr title="retrograde">℞</abbr>{% endif %}</td>
+        <td>{{ p.house }}</td>
+      </tr>
+      {% endfor %}
+      <tr><th scope="row"><span class="glyph" aria-hidden="true">AC</span> Ascendant</th><td>{{ chart.ascendant.position }}</td><td>1</td></tr>
+      <tr><th scope="row"><span class="glyph" aria-hidden="true">MC</span> Midheaven</th><td>{{ chart.midheaven.position }}</td><td>{{ chart.midheaven.house }}</td></tr>
+    </tbody>
+  </table>
+  <p class="hint">Tropical zodiac, whole-sign houses.</p>
+</section>
+
+<div class="actions">
+  <a class="btn btn-ghost" href="/setup">Edit details</a>
+  {% if protected %}
+  <form method="post" action="/logout"><button class="btn btn-ghost">Sign out</button></form>
+  {% endif %}
+</div>
+{% endblock %}

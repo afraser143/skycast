@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="center-card">
+  <div class="logo" aria-hidden="true">✦</div>
+  <h1 class="display">Skycast</h1>
+  <p class="muted">Your sky, your weather, every morning.</p>
+  <form method="post" action="/login" class="stack">
+    <label class="field">Password
+      <input type="password" name="password" autocomplete="current-password" required autofocus>
+    </label>
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+    <button class="btn">Open</button>
+  </form>
+</section>
+{% endblock %}

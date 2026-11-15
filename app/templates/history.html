@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}History · Skycast{% endblock %}
+{% block content %}
+<header class="page-head">
+  <h1 class="display">History</h1>
+</header>
+{% if days %}
+<ol class="history">
+  {% for d in days %}
+  <li class="card">
+    <div class="history-head">
+      <span class="eyebrow">{{ d.day.strftime("%a, %b %-d") }}</span>
+      <span class="moon" aria-hidden="true">{{ d.facts.moon_emoji }}</span>
+    </div>
+    <p class="focus">{{ d.focus }}</p>
+    <p>{{ d.horoscope }}</p>
+  </li>
+  {% endfor %}
+</ol>
+{% else %}
+<p class="muted">Your readings will collect here, one per day.</p>
+{% endif %}
+{% endblock %}

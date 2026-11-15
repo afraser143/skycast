@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Confirm · Skycast{% endblock %}
+{% block content %}
+<header class="page-head">
+  <a href="/setup" class="back">← Back</a>
+  <h1 class="display">Which ones?</h1>
+  <p class="muted">Born {{ born.strftime("%B %-d, %Y at %-I:%M %p") }}, local time.</p>
+</header>
+<form method="post" action="/setup/confirm" class="stack">
+  <input type="hidden" name="birth_local" value="{{ birth_local }}">
+  <fieldset class="card">
+    <legend>Birth place</legend>
+    {% for value, p in birth_matches %}
+    <label class="choice"><input type="radio" name="birth_choice" value="{{ value }}" {% if loop.first %}checked{% endif %}>
+      <span>{{ p.label }}<small>{{ p.tz }}</small></span></label>
+    {% endfor %}
+  </fieldset>
+  <fieldset class="card">
+    <legend>Home city</legend>
+    {% for value, p in home_matches %}
+    <label class="choice"><input type="radio" name="home_choice" value="{{ value }}" {% if loop.first %}checked{% endif %}>
+      <span>{{ p.label }}<small>{{ p.tz }}</small></span></label>
+    {% endfor %}
+  </fieldset>
+  <button class="btn">Cast my chart</button>
+</form>
+{% endblock %}

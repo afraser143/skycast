@@ -1,0 +1,39 @@
+[project]
+name = "skycast"
+version = "0.1.0"
+description = "A daily horoscope from a real birth chart and local weather."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=2.8.0",
+    "astronomy-engine>=2.1.19",
+    "fastapi>=0.163.1",
+    "httpx>=0.28.1",
+    "itsdangerous>=2.2.0",
+    "jinja2>=3.1.6",
+    "psycopg[binary]>=3.3.9",
+    "pydantic>=2.14.3",
+    "python-multipart>=0.0.33",
+    "sqlalchemy>=2.1.8",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "ruff>=0.17.5",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declares dependencies and form fields as default values by design.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Form"]

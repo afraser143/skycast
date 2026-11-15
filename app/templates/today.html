@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% set aspect_words = {"conjunction": "meets", "sextile": "sextile", "square": "square", "trine": "trine", "opposition": "opposite"} %}
+{% block content %}
+<header class="today-head">
+  <p class="eyebrow">{{ reading.day.strftime("%A, %B %-d") }}</p>
+  <p class="moonline"><span class="moon" aria-hidden="true">{{ facts.moon_emoji }}</span>{{ facts.moon_phase }} in {{ facts.moon_sign }}</p>
+</header>
+
+<article class="reading">
+  <p class="focus">{{ reading.focus }}</p>
+  <p class="horoscope">{{ reading.horoscope }}</p>
+</article>
+
+{% if facts.weather %}
+{% set w = facts.weather %}
+<section class="card weather" aria-label="Today's weather">
+  <div class="weather-main">
+    <span class="weather-emoji" aria-hidden="true">{{ w.emoji }}</span>
+    <div>
+      <div class="temp">{{ "%.0f"|format(w.high) }}{{ w.unit }} <span class="muted">/ {{ "%.0f"|format(w.low) }}{{ w.unit }}</span></div>
+      <div class="muted">{{ w.summary|capitalize }} in {{ profile.home_label.split(",")[0] }}</div>
+    </div>
+  </div>
+  <dl class="weather-facts">
+    {% if w.rain_chance is not none %}<div><dt>Rain</dt><dd>{{ w.rain_chance }}%</dd></div>{% endif %}
+    {% if w.wind_max is not none %}<div><dt>Wind</dt><dd>{{ "%.0f"|format(w.wind_max) }} {{ w.wind_unit }}</dd></div>{% endif %}
+    {% if w.sunrise %}<div><dt>Sunrise</dt><dd>{{ w.sunrise }}</dd></div>{% endif %}
+    {% if w.sunset %}<div><dt>Sunset</dt><dd>{{ w.sunset }}</dd></div>{% endif %}
+  </dl>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2 class="section-title">Why today</h2>
+  {% if facts.transits %}
+  <ul class="transits">
+    {% for t in facts.transits[:4] %}
+    <li>
+      <span class="glyphs" aria-hidden="true">{{ t.glyph }}</span>
+      <span>{{ t.transiting }} {{ aspect_words[t.aspect] }} your {{ t.natal }}
+        <small class="muted">{{ "%.1f"|format(t.orb) }}° · {{ "building" if t.applying else "fading" }}</small></span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">No close transits to your chart today: a quiet sky.</p>
+  {% endif %}
+  {% if facts.retrograde %}
+  <p class="retro"><span aria-hidden="true">℞</span> Retrograde: {{ facts.retrograde|join(", ") }}</p>
+  {% endif %}
+</section>
+
+<p class="footnote">
+  {% if reading.source == "ai" %}Written by Claude from today's sky, which Skycast calculates itself.{% else %}Built from today's sky, calculated by Skycast.{% endif %}
+  {% if not facts.weather %} Weather was unavailable this morning.{% endif %}
+</p>
+{% endblock %}
