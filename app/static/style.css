@@ -255,23 +255,47 @@ body[data-tone="light"] .moon-halo { fill: none; }
 
 /* ---- People ------------------------------------------------------------------ */
 
-.people { display: flex; gap: 8px; overflow-x: auto; margin: -4px -16px 14px; padding: 0 16px 4px; scrollbar-width: none; }
+/* Quiet names: plain serif text; the current person is bright with a gold star beneath. */
+.people {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  margin: -6px -16px 6px;
+  padding: 0 16px;
+  scrollbar-width: none;
+  text-shadow: var(--shadow);
+}
 .people::-webkit-scrollbar { display: none; }
+/* Auto margins centre the row when it fits, and still let it scroll when it doesn't. */
+.people a:first-child { margin-left: auto; }
+.people a:last-child { margin-right: auto; }
 .people a {
   flex: none;
-  padding: 7px 15px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: var(--ink);
+  position: relative;
+  min-height: 44px;
+  padding: 8px 12px 14px;
+  color: var(--ink-soft);
+  opacity: 0.75;
   text-decoration: none;
-  font-weight: 600;
-  font-size: 15px;
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1.1;
+  transition: opacity 0.2s, color 0.2s;
 }
-.people a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.people a.add { color: var(--accent); }
+.people a:hover { opacity: 1; }
+.people a[aria-current="page"] { color: var(--ink); opacity: 1; font-weight: 600; }
+.people a[aria-current="page"]::after {
+  content: "✦";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--gold);
+  font-family: var(--sans);
+}
+.people a.add { font-family: var(--sans); font-size: 22px; font-weight: 400; }
 .for-whom { text-align: center; color: var(--gold); font-family: var(--display); font-size: 20px; font-weight: 600; text-shadow: var(--shadow); }
 
 /* ---- Chart ------------------------------------------------------------------- */
