@@ -2,8 +2,8 @@
 {% block title %}Chart · Skycast{% endblock %}
 {% block content %}
 <header class="page-head">
-  <h1 class="display">Your chart</h1>
-  <p class="muted">{{ born.strftime("%B %-d, %Y · %-I:%M %p") }} · {{ profile.birth_label }}</p>
+  <h1 class="display">{% if person.is_owner and not shared %}Your chart{% else %}{{ person.first_name }}'s chart{% endif %}</h1>
+  <p class="muted">{{ born.strftime("%B %-d, %Y · %-I:%M %p") }} · {{ person.birth_label }}</p>
 </header>
 
 <div class="big-three">
@@ -33,10 +33,33 @@
   <p class="hint">Tropical zodiac, whole-sign houses.</p>
 </section>
 
+{% if not shared %}
+<section class="card share">
+  <h2 class="section-title">Private link</h2>
+  {% if person.share_hash %}
+  <p>{% if person.is_owner %}Your{% else %}{{ person.first_name }}'s{% endif %} link is <strong>on</strong> (made {{ person.share_created.strftime("%b %-d") }}). Anyone with it can see this reading, chart and history.</p>
+  <div class="actions">
+    <form method="post" action="/p/{{ person.id }}/share"><button class="btn btn-ghost">Make a new link</button></form>
+    <form method="post" action="/p/{{ person.id }}/share/off"><button class="btn btn-ghost">Turn off</button></form>
+  </div>
+  {% else %}
+  <p class="muted">Make a link {% if person.is_owner %}to view your reading without the password{% else %}for {{ person.first_name }} to see their own daily reading and chart{% endif %}. No password needed, and it shows nothing else.</p>
+  <div class="actions">
+    <form method="post" action="/p/{{ person.id }}/share"><button class="btn">Make a private link</button></form>
+  </div>
+  {% endif %}
+</section>
+
 <div class="actions">
-  <a class="btn btn-ghost" href="/setup">Edit details</a>
+  <a class="btn btn-ghost" href="/p/{{ person.id }}/edit">Edit details</a>
+  {% if not person.is_owner %}
+  <form method="post" action="/p/{{ person.id }}/delete" onsubmit='return confirm({{ ("Remove " ~ person.first_name ~ " and all of their readings?")|tojson }})'>
+    <button class="btn btn-ghost danger">Remove</button>
+  </form>
+  {% endif %}
   {% if protected %}
   <form method="post" action="/logout"><button class="btn btn-ghost">Sign out</button></form>
   {% endif %}
 </div>
+{% endif %}
 {% endblock %}

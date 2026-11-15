@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Skycast{% endblock %}
+{% block content %}
+<section class="center-card">
+  <div class="logo" aria-hidden="true">✦</div>
+  <h1 class="display">Nothing here</h1>
+  <p class="muted">{{ message if message and message != "Not Found" else "This page doesn't exist." }}</p>
+</section>
+{% endblock %}

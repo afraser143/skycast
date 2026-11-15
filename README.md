@@ -4,6 +4,8 @@
 
 Every morning Skycast calculates where the planets actually are, finds how they line up with my natal chart, checks the forecast for my city, and turns that into a 2–3 sentence reading. It lives on my iPhone home screen like an app.
 
+I can add other people too: each gets their own chart, their own city's weather and their own daily reading, and I can send them a private link that shows only theirs.
+
 | Today | Chart | Light mode |
 |---|---|---|
 | ![Today, dark mode](docs/screenshots/today-dark.png) | ![Birth chart wheel](docs/screenshots/chart-dark.png) | ![Today, light mode](docs/screenshots/today-light.png) |
@@ -33,7 +35,9 @@ home city ──────────────► forecast (Open-Meteo) �
 - **Birth details stay private.** They are entered on a setup screen behind the app password and stored in my own database, never in the repo. The AI receives chart placements ("Sun in Taurus"), never the birth date, time or place, and a test checks this.
 - **Everything degrades gracefully.** No API key, an API error, an output that fails the checks, or a weather outage all still produce a reading, built from the same facts by a template. Every day logs one `[horoscope]` line saying which path it took.
 - **Place search that understands "Austin, TX".** The geocoder matches only on the city name, so Skycast splits off the state or country (expanding US state abbreviations) and ranks matches with it, then removes duplicates.
-- **Single user, simple auth.** One password from an environment variable, compared in constant time, with a signed session cookie that lasts a year so the home-screen app stays signed in.
+- **Private share links, stored as hashes.** A link is 24 random bytes. Only its SHA-256 hash goes in the database, so the database can't reveal the link. It's shown once, can be replaced or turned off, and opens only that person's pages. Shared pages send `noindex` and `Referrer-Policy: no-referrer`, and a wrong, old or turned-off link gets the same 404.
+- **A safe schema upgrade.** Skycast started with a single person. On start-up it copies that profile and its readings into the multi-person tables once, leaving the old tables untouched. This is tested on SQLite and against real Postgres with tables created by the previous version's code.
+- **One owner, simple auth.** One password from an environment variable, compared in constant time, with a signed session cookie that lasts a year so the home-screen app stays signed in.
 
 ## Stack
 

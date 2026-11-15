@@ -1,28 +1,39 @@
 {% extends "base.html" %}
-{% block title %}Set up · Skycast{% endblock %}
+{% block title %}{% if person %}Edit {{ person.first_name }}{% elif first %}Welcome{% else %}Add someone{% endif %} · Skycast{% endblock %}
 {% block content %}
 <header class="page-head">
-  {% if profile %}<a href="/chart" class="back">← Chart</a>{% endif %}
-  <h1 class="display">{% if profile %}Edit details{% else %}Welcome{% endif %}</h1>
-  <p class="muted">Your birth details build your chart. Your home city sets the weather. They stay in your own database and are never sent to the AI.</p>
+  {% if person %}<a href="/p/{{ person.id }}/chart" class="back">← Chart</a>{% elif not first %}<a href="/" class="back">← Back</a>{% endif %}
+  <h1 class="display">{% if person %}Edit {{ person.first_name }}{% elif first %}Welcome{% else %}Add someone{% endif %}</h1>
+  <p class="muted">
+    {% if first or (person and person.is_owner) %}Your birth details build your chart. Your home city sets the weather.
+    {% else %}Their birth details build their chart, and their home city sets their weather. Only add someone who's happy to share these.
+    {% endif %}
+    Birth details stay in your own database and are never sent to the AI.
+  </p>
 </header>
-<form method="post" action="/setup" class="card stack">
+<form method="post" action="/people/search" class="card stack">
+  {% if person %}<input type="hidden" name="person_id" value="{{ person.id }}">{% endif %}
+  {% if not first %}
+  <label class="field">Name
+    <input name="name" required maxlength="40" placeholder="First name or nickname" value="{{ form.name or (person.name if person else '') }}">
+  </label>
+  {% endif %}
   <div class="row">
     <label class="field">Birth date
-      <input type="date" name="birth_date" required value="{{ form.birth_date or (profile.birth_local[:10] if profile else '') }}">
+      <input type="date" name="birth_date" required value="{{ form.birth_date or (person.birth_local[:10] if person else '') }}">
     </label>
     <label class="field">Birth time
-      <input type="time" name="birth_time" required value="{{ form.birth_time or (profile.birth_local[11:16] if profile else '') }}">
+      <input type="time" name="birth_time" required value="{{ form.birth_time or (person.birth_local[11:16] if person else '') }}">
     </label>
   </div>
   <label class="field">Birth place
-    <input name="birth_place" required placeholder="City, state or country" value="{{ form.birth_place or (profile.birth_label if profile else '') }}">
+    <input name="birth_place" required placeholder="City, state or country" value="{{ form.birth_place or (person.birth_label if person else '') }}">
   </label>
-  <label class="field">Home city <span class="hint">for your daily weather</span>
-    <input name="home_city" required placeholder="City" value="{{ form.home_city or (profile.home_label if profile else '') }}">
+  <label class="field">Home city <span class="hint">for the daily weather</span>
+    <input name="home_city" required placeholder="City" value="{{ form.home_city or (person.home_label if person else '') }}">
   </label>
   {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
   <button class="btn">Find places</button>
-  {% if profile %}<p class="hint">Saving new details starts your reading history fresh, since past readings were for the old chart.</p>{% endif %}
+  {% if person %}<p class="hint">Saving new details starts this person's reading history fresh, since past readings were for the old chart.</p>{% endif %}
 </form>
 {% endblock %}

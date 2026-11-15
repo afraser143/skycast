@@ -4,27 +4,38 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{% block title %}Skycast{% endblock %}</title>
-  <meta name="description" content="A daily horoscope from your real birth chart and your local weather.">
+  <meta name="description" content="A daily horoscope from a real birth chart and local weather.">
+  {% if shared %}<meta name="robots" content="noindex, nofollow">{% endif %}
   <meta name="theme-color" content="#f6f1ea" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0f1024" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Skycast">
-  <link rel="manifest" href="/static/manifest.webmanifest">
+  {% if not shared %}<link rel="manifest" href="/static/manifest.webmanifest">{% endif %}
   <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <main class="page {% if tab %}has-tabs{% endif %}">
+    {% if people and person %}
+    <nav class="people" aria-label="People">
+      {% for p in people %}
+      <a href="/p/{{ p.id }}{% if tab and tab != 'today' %}/{{ tab }}{% endif %}" {% if p.id == person.id %}aria-current="page"{% endif %}>{{ p.first_name }}</a>
+      {% endfor %}
+      <a href="/people/new" class="add" aria-label="Add a person">＋</a>
+    </nav>
+    {% elif shared and person %}
+    <p class="for-whom">✦ {{ person.first_name }}'s sky</p>
+    {% endif %}
     {% block content %}{% endblock %}
   </main>
   {% if tab %}
   <nav class="tabs" aria-label="Sections">
-    <a href="/" {% if tab == "today" %}aria-current="page"{% endif %}><span aria-hidden="true">☼</span>Today</a>
-    <a href="/chart" {% if tab == "chart" %}aria-current="page"{% endif %}><span aria-hidden="true">◎</span>Chart</a>
-    <a href="/history" {% if tab == "history" %}aria-current="page"{% endif %}><span aria-hidden="true">☾</span>History</a>
+    <a href="{{ base }}" {% if tab == "today" %}aria-current="page"{% endif %}><span aria-hidden="true">☼</span>Today</a>
+    <a href="{{ base }}/chart" {% if tab == "chart" %}aria-current="page"{% endif %}><span aria-hidden="true">◎</span>Chart</a>
+    <a href="{{ base }}/history" {% if tab == "history" %}aria-current="page"{% endif %}><span aria-hidden="true">☾</span>History</a>
   </nav>
   {% endif %}
 </body>

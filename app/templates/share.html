@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Share {{ person.first_name }}'s link · Skycast{% endblock %}
+{% block content %}
+<header class="page-head">
+  <a href="/p/{{ person.id }}/chart" class="back">← {{ person.first_name }}'s chart</a>
+  <h1 class="display">{{ person.first_name }}'s link</h1>
+  <p class="muted">Send this to {{ person.first_name }}. It opens their daily reading, chart and history, and nothing else.</p>
+</header>
+<section class="card stack">
+  <label class="field">Private link
+    <input id="link" value="{{ link }}" readonly onfocus="this.select()">
+  </label>
+  <div class="row">
+    <button class="btn" type="button" id="copy">Copy</button>
+    <button class="btn btn-ghost" type="button" id="send" hidden>Send…</button>
+  </div>
+  <p class="hint"><strong>Copy it now.</strong> Skycast keeps only a fingerprint of the link, so it can't show it again. If it's lost, make a new one; the old one stops working.</p>
+</section>
+<script>
+  const link = document.getElementById("link").value;
+  const copy = document.getElementById("copy");
+  copy.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(link); copy.textContent = "Copied ✓"; }
+    catch { document.getElementById("link").select(); }
+  });
+  const send = document.getElementById("send");
+  if (navigator.share) {
+    send.hidden = false;
+    send.addEventListener("click", () => navigator.share({ title: "Your Skycast", url: link }).catch(() => {}));
+  }
+</script>
+{% endblock %}

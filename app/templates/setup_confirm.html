@@ -2,11 +2,13 @@
 {% block title %}Confirm · Skycast{% endblock %}
 {% block content %}
 <header class="page-head">
-  <a href="/setup" class="back">← Back</a>
+  <a href="javascript:history.back()" class="back">← Back</a>
   <h1 class="display">Which ones?</h1>
-  <p class="muted">Born {{ born.strftime("%B %-d, %Y at %-I:%M %p") }}, local time.</p>
+  <p class="muted">{{ name }}, born {{ born.strftime("%B %-d, %Y at %-I:%M %p") }}, local time.</p>
 </header>
-<form method="post" action="/setup/confirm" class="stack">
+<form method="post" action="/people/save" class="stack">
+  <input type="hidden" name="name" value="{{ name }}">
+  {% if person %}<input type="hidden" name="person_id" value="{{ person.id }}">{% endif %}
   <input type="hidden" name="birth_local" value="{{ birth_local }}">
   <fieldset class="card">
     <legend>Birth place</legend>
@@ -22,6 +24,6 @@
       <span>{{ p.label }}<small>{{ p.tz }}</small></span></label>
     {% endfor %}
   </fieldset>
-  <button class="btn">Cast my chart</button>
+  <button class="btn">Cast the chart</button>
 </form>
 {% endblock %}

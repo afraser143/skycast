@@ -205,3 +205,24 @@ legend { font-weight: 700; padding: 0 4px; }
   .horoscope { font-size: 21px; }
   .weather-facts { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ---- People ---- */
+.people { display: flex; gap: 8px; overflow-x: auto; margin: -4px -16px 18px; padding: 0 16px 4px; scrollbar-width: none; }
+.people::-webkit-scrollbar { display: none; }
+.people a {
+  flex: none;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+}
+.people a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.people a.add { color: var(--accent); }
+.for-whom { text-align: center; color: var(--gold); font-weight: 700; margin-bottom: 4px; }
+.share p { margin-bottom: 4px; }
+.share .actions { justify-content: flex-start; margin-top: 12px; }
+.danger { color: var(--error); }
