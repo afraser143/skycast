@@ -97,7 +97,7 @@ def test_first_person_is_the_owner(client):
         assert person.birth_utc.strftime("%H:%M") == "14:30"
     assert client.get("/", follow_redirects=False).headers["location"] == f"/p/{me}"
     r = client.get(f"/p/{me}/chart")
-    assert "Your chart" in r.text and "Taurus" in r.text and "<svg" in r.text
+    assert "Your sky at birth" in r.text and "Taurus" in r.text and "<svg" in r.text
 
 
 def test_today_is_written_once_per_person_per_day(client):
@@ -123,7 +123,7 @@ def test_each_person_gets_their_own_chart_city_and_reading(client):
     assert client.calls["forecast"] == ["America/Chicago", "America/Chicago"]
 
     chart = client.get(f"/p/{sam}/chart").text
-    assert "Sam's chart" in chart and "Scorpio" in chart  # Sun sign for Nov 20
+    assert "Sam's sky at birth" in chart and "Scorpio" in chart  # Sun sign for Nov 20
     # Names never reach the AI: it only gets the facts.
     assert not any("Sam" in p for p in client.calls["prompts"])
 
@@ -146,7 +146,7 @@ def test_share_link_shows_one_person_and_nothing_else(client):
     assert "Sam's sky" in r.text and "The Moon is on your side today." in r.text
     assert r.headers["x-robots-tag"].startswith("noindex") and r.headers["referrer-policy"] == "no-referrer"
     assert ">Me<" not in r.text and "/people/new" not in r.text and "/edit" not in r.text and "/share" not in r.text
-    assert "Sam's chart" in stranger.get(f"/s/{token}/chart").text
+    assert "Sam's sky at birth" in stranger.get(f"/s/{token}/chart").text
     assert stranger.get(f"/s/{token}/history").status_code == 200
     # The link can't reach anyone else, or the owner pages.
     assert stranger.get(f"/p/{sam}", follow_redirects=False).headers["location"] == "/login"
@@ -314,3 +314,13 @@ def test_new_columns_are_added_to_an_existing_table(tmp_path):
     with sessions() as db:
         old = db.query(Reading).one()
         assert old.focus == "Old" and old.messenger is None
+
+
+def test_chart_page_reads_like_a_chart_not_a_spreadsheet(client):
+    login(client)
+    me = add_person(client)
+    r = client.get(f"/p/{me}/chart").text
+    assert "Sun in Taurus" in r and "Your core self: steady and sensual, rooted like rich soil." in r
+    assert "Ascendant in" in r and "How you meet the world" in r
+    assert "12th house" in r or "1st house" in r
+    assert 'class="aspect aspect-' in r  # natal aspect lines in the wheel

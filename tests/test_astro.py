@@ -120,3 +120,27 @@ def test_moon_phase():
     assert name == "Full Moon" and lit > 0.99
     name, _, lit = astro.moon_phase(full + timedelta(days=7.4))
     assert name == "Last Quarter"
+
+
+def test_natal_aspect_lines_and_meanings():
+    from app import nature, wheel
+
+    chart = astro.natal_chart(datetime(1990, 5, 4, 14, 30, tzinfo=UTC), 30.27, -97.74)
+    for a, b, aspect in wheel.natal_aspects(chart):
+        assert aspect != "conjunction"
+        assert astro.aspect_between(a.lon, b.lon, wheel.NATAL_ORB)[0] == aspect
+    for p in chart.points:
+        assert nature.placement_meaning(p.name, p.sign).endswith(".")
+    assert [nature.ordinal(n) for n in (1, 2, 3, 4, 11, 12)] == ["1st", "2nd", "3rd", "4th", "11th", "12th"]
+
+
+def test_planets_sharing_a_sign_get_different_images():
+    from app import nature
+
+    # In May 1990, Saturn, Uranus and Neptune were all in Capricorn.
+    chart = astro.natal_chart(datetime(1990, 5, 4, 14, 30, tzinfo=UTC), 30.27, -97.74)
+    capricorn = [
+        nature.placement_meaning(p.name, p.sign).split(": ", 1)[1] for p in chart.placements if p.sign == "Capricorn"
+    ]
+    assert len(capricorn) == 3 and len(set(capricorn)) == 3
+    assert all(len(images) == 3 for images in nature.SIGN_NATURE.values())

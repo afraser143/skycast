@@ -144,3 +144,98 @@ def pick_messenger(cond: str, aspect: str | None, day: date, salt: str = "") -> 
     pool = both or either or MESSENGERS
     digest = hashlib.sha256(f"{day.isoformat()}{salt}".encode()).digest()
     return pool[digest[0] % len(pool)]
+
+
+# ---- Chart meanings ----------------------------------------------------------------
+
+# Each sign's nature, as something in the natural world. Three images per sign, so several
+# planets in one sign don't all read the same.
+SIGN_NATURE = {
+    "Aries": [
+        "quick and brave, like the first green shoot of spring",
+        "bold and kindling, like a spark catching dry grass",
+        "eager and direct, like a ram climbing toward the light",
+    ],
+    "Taurus": [
+        "steady and sensual, rooted like rich soil",
+        "patient and loyal, like an old orchard bearing fruit",
+        "calm and abundant, like a meadow in late spring",
+    ],
+    "Gemini": [
+        "curious and quick, like wind moving through leaves",
+        "bright and restless, like birdsong passing from tree to tree",
+        "playful and many-sided, like light on moving water",
+    ],
+    "Cancer": [
+        "tender and protective, like a tide pool sheltering life",
+        "deeply feeling, like the sea answering the Moon",
+        "nurturing and close, like a nest woven from soft things",
+    ],
+    "Leo": [
+        "warm and radiant, like the high summer sun",
+        "generous and proud, like a field of sunflowers",
+        "bold-hearted and bright, like firelight gathering others close",
+    ],
+    "Virgo": [
+        "careful and devoted, like a gardener tending each row",
+        "quietly skilled, like a bee building perfect comb",
+        "clear and grounded, like a harvest sorted with care",
+    ],
+    "Libra": [
+        "graceful and fair, like a breeze finding its balance",
+        "harmonious and gentle, like reeds swaying together",
+        "drawn to beauty, like evening light resting on still water",
+    ],
+    "Scorpio": [
+        "deep and transforming, like still water over hidden springs",
+        "intense and enduring, like roots reaching into the dark",
+        "powerful and private, like the earth's slow inner fire",
+    ],
+    "Sagittarius": [
+        "free and far-seeing, like flames leaping toward open sky",
+        "adventurous and hopeful, like a trail over the next ridge",
+        "wide and searching, like a hawk riding warm air",
+    ],
+    "Capricorn": [
+        "patient and enduring, like a mountain wearing the seasons",
+        "steady and ambitious, like a goat climbing sure-footed",
+        "disciplined and wise, like a pine holding through winter",
+    ],
+    "Aquarius": [
+        "original and far-sighted, like a high wind clearing the sky",
+        "free-thinking and kind, like rain falling on everyone alike",
+        "visionary, like the first star appearing at dusk",
+    ],
+    "Pisces": [
+        "dreamy and boundless, like the sea meeting the horizon",
+        "compassionate and fluid, like a river finding its way",
+        "intuitive and soft, like mist rising from a morning lake",
+    ],
+}
+
+# What each placement speaks to.
+PLACEMENT_THEME = {
+    "Sun": "Your core self",
+    "Moon": "Your inner tides",
+    "Mercury": "How you think and speak",
+    "Venus": "How you love and what you value",
+    "Mars": "How you act and what you want",
+    "Jupiter": "Where you grow and find good fortune",
+    "Saturn": "Where you build lasting strength",
+    "Uranus": "Where you break new ground",
+    "Neptune": "Where you dream and dissolve",
+    "Pluto": "Where you transform",
+    "Ascendant": "How you meet the world",
+    "Midheaven": "Your path and calling",
+}
+
+
+def placement_meaning(name: str, sign: str) -> str:
+    """'Sun', 'Taurus' -> 'Your core self: steady and sensual, rooted like rich soil.'
+    Neighbouring placements use different images, so three planets in one sign read differently."""
+    images = SIGN_NATURE[sign]
+    return f"{PLACEMENT_THEME[name]}: {images[list(PLACEMENT_THEME).index(name) % len(images)]}."
+
+
+def ordinal(n: int) -> str:
+    return f"{n}{'th' if 11 <= n % 100 <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"

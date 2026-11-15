@@ -215,7 +215,7 @@ class Transit:
         return f"{GLYPHS[self.transiting]} {ASPECT_GLYPHS[self.aspect]}︎ {GLYPHS[self.natal]}"
 
 
-def _aspect_between(a: float, b: float, max_orb: float) -> tuple[str, float] | None:
+def aspect_between(a: float, b: float, max_orb: float) -> tuple[str, float] | None:
     sep = abs(signed_delta(a, b))
     best = None
     for name, angle in ASPECTS.items():
@@ -232,7 +232,7 @@ def transits(chart: Chart, moment: datetime) -> list[Transit]:
     found: list[Transit] = []
     for t_name, t_lon in now.items():
         for natal in chart.points:
-            hit = _aspect_between(t_lon, natal.lon, ORBS[t_name])
+            hit = aspect_between(t_lon, natal.lon, ORBS[t_name])
             if not hit:
                 continue
             aspect, orb = hit

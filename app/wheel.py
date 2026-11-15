@@ -1,4 +1,4 @@
-"""Draws the birth chart wheel as an inline SVG.
+"""Draws the birth chart wheel as an inline SVG, in fine glowing lines.
 
 Astrological convention: the Ascendant sits at 9 o'clock and the zodiac runs
 counter-clockwise from it, so houses 1-6 are below the horizon line.
@@ -13,12 +13,15 @@ from . import astro
 
 SIZE = 360
 C = SIZE / 2
-R_OUTER = 172
-R_SIGNS = 144  # inner edge of the sign ring
-R_PLANETS = 118
-R_INNER = 70
+R_OUTER = 170
+R_SIGNS = 140  # inner edge of the sign band
+R_PLANETS = 113
+R_INNER = 84  # natal aspect lines are drawn inside this circle
+R_HOUSES = R_INNER + 9  # a band of its own, between the aspect lines and the planets
 
-ELEMENT_FILL = ["var(--fire)", "var(--earth)", "var(--air)", "var(--water)"]
+NATAL_ORB = 6.0
+HARMONIOUS = {"trine", "sextile"}
+TENSE = {"square", "opposition"}
 
 
 def _screen_angle(lon: float, asc: float) -> float:
@@ -32,11 +35,11 @@ def _point(lon: float, asc: float, r: float) -> tuple[float, float]:
     return C + r * math.cos(a), C + r * math.sin(a)
 
 
-def _spread(lons: list[float], min_gap: float = 8.0) -> list[float]:
+def _spread(lons: list[float], min_gap: float = 10.0) -> list[float]:
     """Nudges planets apart so clustered glyphs don't overlap (positions shown are display-only)."""
     order = sorted(range(len(lons)), key=lambda i: lons[i])
     shown = [lons[i] for i in order]
-    for _ in range(10):
+    for _ in range(12):
         moved = False
         for k in range(1, len(shown)):
             gap = shown[k] - shown[k - 1]
@@ -53,56 +56,81 @@ def _spread(lons: list[float], min_gap: float = 8.0) -> list[float]:
     return out
 
 
+def natal_aspects(chart: astro.Chart) -> list[tuple[astro.Placement, astro.Placement, str]]:
+    """Major aspects between the natal planets (not the angles), within a 6° orb."""
+    found = []
+    planets = chart.placements
+    for i, a in enumerate(planets):
+        for b in planets[i + 1 :]:
+            hit = astro.aspect_between(a.lon, b.lon, NATAL_ORB)
+            if hit and hit[0] != "conjunction":  # a conjunction would be a line of zero length
+                found.append((a, b, hit[0]))
+    return found
+
+
+def _line(x1, y1, x2, y2, cls) -> str:
+    return f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" class="{cls}"/>'
+
+
 def chart_svg(chart: astro.Chart) -> str:
     asc = chart.ascendant.lon
     parts = [
         f'<svg viewBox="0 0 {SIZE} {SIZE}" role="img" aria-label="Birth chart wheel" class="wheel">',
-        f'<circle cx="{C}" cy="{C}" r="{R_OUTER}" class="wheel-bg"/>',
+        '<defs><radialGradient id="wheel-core"><stop offset="0" stop-color="var(--gold)" stop-opacity="0.16"/>'
+        '<stop offset="1" stop-color="var(--gold)" stop-opacity="0"/></radialGradient></defs>',
+        f'<circle cx="{C}" cy="{C}" r="{R_INNER}" fill="url(#wheel-core)"/>',
     ]
 
-    # Sign ring, tinted by element.
+    # Rings.
+    for r, cls in ((R_OUTER, "ring ring-outer"), (R_SIGNS, "ring"), (R_INNER, "ring ring-faint")):
+        parts.append(f'<circle cx="{C}" cy="{C}" r="{r}" class="{cls}"/>')
+
+    # Degree ticks around the outside edge: every 5°, longer every 10°.
+    for d in range(0, 360, 5):
+        length = 6 if d % 10 == 0 else 3
+        parts.append(_line(*_point(d, asc, R_OUTER), *_point(d, asc, R_OUTER - length), "degree"))
+
+    # Signs: dividers through the band, and a gold glyph in each.
     for i in range(12):
-        start, end = i * 30, (i + 1) * 30
-        x1, y1 = _point(start, asc, R_OUTER)
-        x2, y2 = _point(end, asc, R_OUTER)
-        x3, y3 = _point(end, asc, R_SIGNS)
-        x4, y4 = _point(start, asc, R_SIGNS)
-        parts.append(
-            f'<path d="M{x1:.1f},{y1:.1f} A{R_OUTER},{R_OUTER} 0 0 0 {x2:.1f},{y2:.1f} '
-            f'L{x3:.1f},{y3:.1f} A{R_SIGNS},{R_SIGNS} 0 0 1 {x4:.1f},{y4:.1f} Z" '
-            f'style="fill:{ELEMENT_FILL[i % 4]}" class="sign-slice"/>'
-        )
-        gx, gy = _point(start + 15, asc, (R_OUTER + R_SIGNS) / 2)
+        parts.append(_line(*_point(i * 30, asc, R_OUTER), *_point(i * 30, asc, R_SIGNS), "sign-divider"))
+        gx, gy = _point(i * 30 + 15, asc, (R_OUTER + R_SIGNS) / 2 - 1)
         parts.append(
             f'<text x="{gx:.1f}" y="{gy:.1f}" class="sign-glyph"><title>{astro.SIGNS[i]}</title>'
             f"{astro.SIGN_GLYPHS[i]}</text>"
         )
 
-    # Whole-sign house cusps are the sign boundaries; draw them through the inner ring.
-    for i in range(12):
-        x1, y1 = _point(i * 30, asc, R_SIGNS)
-        x2, y2 = _point(i * 30, asc, R_INNER)
-        parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" class="cusp"/>')
-    parts.append(f'<circle cx="{C}" cy="{C}" r="{R_SIGNS}" class="ring"/>')
-    parts.append(f'<circle cx="{C}" cy="{C}" r="{R_INNER}" class="ring"/>')
+    # Whole-sign houses: each house is one sign, numbered from the rising sign.
+    first = astro.sign_index(asc)
+    for house in range(1, 13):
+        sign = (first + house - 1) % 12
+        parts.append(_line(*_point(sign * 30, asc, R_SIGNS), *_point(sign * 30, asc, R_INNER), "cusp"))
+        hx, hy = _point(sign * 30 + 15, asc, R_HOUSES)
+        parts.append(f'<text x="{hx:.1f}" y="{hy:.1f}" class="house-number">{house}</text>')
+
+    # Natal aspects: a quiet constellation between the planets.
+    for a, b, aspect in natal_aspects(chart):
+        cls = "aspect aspect-easy" if aspect in HARMONIOUS else "aspect aspect-tense"
+        parts.append(_line(*_point(a.lon, asc, R_INNER), *_point(b.lon, asc, R_INNER), cls))
+    for p in chart.placements:
+        x, y = _point(p.lon, asc, R_INNER)
+        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="1.6" class="aspect-node"/>')
 
     # Horizon (Ascendant-Descendant) and meridian (MC-IC) axes.
     for lon, label in ((asc, "AC"), (chart.midheaven.lon, "MC")):
-        x1, y1 = _point(lon, asc, R_SIGNS)
-        x2, y2 = _point(lon + 180, asc, R_SIGNS)
-        parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" class="axis"/>')
-        # Inside the planet ring, so a planet sitting on an angle never covers its label.
-        lx, ly = _point(lon, asc, R_INNER + 12)
+        parts.append(_line(*_point(lon, asc, R_OUTER + 4), *_point(lon, asc, R_SIGNS), "axis"))
+        parts.append(_line(*_point(lon + 180, asc, R_OUTER + 4), *_point(lon + 180, asc, R_SIGNS), "axis"))
+        # Just outside the rim, nudged off the line toward the centre of the page, so it never clips.
+        lx, ly = _point(lon, asc, R_OUTER + 4)
+        lx += 12 if lx < C else -12
+        ly -= 9
         parts.append(f'<text x="{lx:.1f}" y="{ly:.1f}" class="axis-label">{label}</text>')
 
-    # Planets: a tick at the true position on the inner ring, the glyph nudged clear of neighbours.
+    # Planets: a tick at the true position, the glyph nudged clear of its neighbours.
     shown = _spread([p.lon for p in chart.placements])
     for p, display in zip(chart.placements, shown, strict=True):
-        tx1, ty1 = _point(p.lon, asc, R_SIGNS)
-        tx2, ty2 = _point(p.lon, asc, R_SIGNS - 7)
-        gx, gy = _point(display, asc, R_PLANETS)
         title = escape(f"{p.name} {p.position}{' (retrograde)' if p.retrograde else ''}")
-        parts.append(f'<line x1="{tx1:.1f}" y1="{ty1:.1f}" x2="{tx2:.1f}" y2="{ty2:.1f}" class="tick"/>')
+        parts.append(_line(*_point(p.lon, asc, R_SIGNS), *_point(p.lon, asc, R_SIGNS - 6), "tick"))
+        gx, gy = _point(display, asc, R_PLANETS)
         parts.append(f'<text x="{gx:.1f}" y="{gy:.1f}" class="planet-glyph"><title>{title}</title>{p.glyph}</text>')
 
     parts.append("</svg>")

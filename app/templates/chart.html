@@ -1,65 +1,91 @@
 {% extends "base.html" %}
 {% block title %}Chart · Skycast{% endblock %}
 {% block content %}
-<header class="page-head">
-  <h1 class="display">{% if person.is_owner and not shared %}Your chart{% else %}{{ person.first_name }}'s chart{% endif %}</h1>
-  <p class="muted">{{ born.strftime("%B %-d, %Y · %-I:%M %p") }} · {{ person.birth_label }}</p>
+<header class="chart-head">
+  <p class="eyebrow">{{ born.strftime("%B %-d, %Y · %-I:%M %p") }}</p>
+  <h1 class="display">{% if person.is_owner and not shared %}Your sky at birth{% else %}{{ person.first_name }}'s sky at birth{% endif %}</h1>
+  <p class="muted">{{ person.birth_label }}</p>
 </header>
 
 <div class="big-three">
-  <div class="card"><span class="label">Sun</span><span class="value">{{ chart.big_three.sun }}</span></div>
-  <div class="card"><span class="label">Moon</span><span class="value">{{ chart.big_three.moon }}</span></div>
-  <div class="card"><span class="label">Rising</span><span class="value">{{ chart.big_three.rising }}</span></div>
+  {% for label, key in (("Sun", "sun"), ("Moon", "moon"), ("Rising", "rising")) %}
+  {% set sign = chart.big_three[key] %}
+  <div>
+    <span class="big-glyph" aria-hidden="true">{{ sign_glyphs[signs.index(sign)] }}</span>
+    <span class="label">{{ label }}</span>
+    <span class="value">{{ sign }}</span>
+  </div>
+  {% endfor %}
 </div>
 
-<figure class="card wheel-card">{{ wheel|safe }}</figure>
+<figure class="wheel-wrap">{{ wheel|safe }}
+  <figcaption class="wheel-legend">
+    <span><i class="swatch swatch-easy"></i>flowing aspects</span>
+    <span><i class="swatch swatch-tense"></i>tense aspects</span>
+  </figcaption>
+</figure>
 
-<section class="card">
-  <h2 class="section-title">Placements</h2>
-  <table class="placements">
-    <thead><tr><th scope="col">Planet</th><th scope="col">Position</th><th scope="col">House</th></tr></thead>
-    <tbody>
-      {% for p in chart.placements %}
-      <tr>
-        <th scope="row"><span class="glyph" aria-hidden="true">{{ p.glyph }}</span> {{ p.name }}</th>
-        <td>{{ p.position }}{% if p.retrograde %} <abbr title="retrograde">℞</abbr>{% endif %}</td>
-        <td>{{ p.house }}</td>
-      </tr>
-      {% endfor %}
-      <tr><th scope="row"><span class="glyph" aria-hidden="true">AC</span> Ascendant</th><td>{{ chart.ascendant.position }}</td><td>1</td></tr>
-      <tr><th scope="row"><span class="glyph" aria-hidden="true">MC</span> Midheaven</th><td>{{ chart.midheaven.position }}</td><td>{{ chart.midheaven.house }}</td></tr>
-    </tbody>
-  </table>
-  <p class="hint">Tropical zodiac, whole-sign houses.</p>
+<section class="placements-list" aria-label="Placements">
+  {% for p in chart.points %}
+  <article class="placement">
+    <span class="placement-glyph" aria-hidden="true">{{ p.glyph }}</span>
+    <div>
+      <h2 class="placement-title">{{ p.name }} in {{ p.sign }}</h2>
+      <p class="placement-detail">
+        {{ p.position.split(" ")[0] }} · {{ ordinal(p.house) }} house{% if p.retrograde %} · <span class="retro-mark">retrograde</span>{% endif %}
+      </p>
+      <p class="placement-meaning">{{ meaning(p.name, p.sign) }}</p>
+    </div>
+  </article>
+  {% endfor %}
+  <p class="hint center">Tropical zodiac, whole-sign houses.</p>
 </section>
 
 {% if not shared %}
-<section class="card share">
-  <h2 class="section-title">Private link</h2>
-  {% if person.share_hash %}
-  <p>{% if person.is_owner %}Your{% else %}{{ person.first_name }}'s{% endif %} link is <strong>on</strong> (made {{ person.share_created.strftime("%b %-d") }}). Anyone with it can see this reading, chart and history.</p>
-  <div class="actions">
-    <form method="post" action="/p/{{ person.id }}/share"><button class="btn btn-ghost">Make a new link</button></form>
-    <form method="post" action="/p/{{ person.id }}/share/off"><button class="btn btn-ghost">Turn off</button></form>
+<section class="quiet-settings" aria-label="Settings for {{ person.first_name }}">
+  <h2 class="section-title">{% if person.is_owner %}Settings{% else %}Settings for {{ person.first_name }}{% endif %}</h2>
+
+  <div class="setting">
+    <div>
+      <p class="setting-name">Private link</p>
+      {% if person.share_hash %}
+      <p class="hint">On since {{ person.share_created.strftime("%b %-d") }}. Anyone with it can see this reading, chart and history.</p>
+      {% else %}
+      <p class="hint">{% if person.is_owner %}View your reading without the password.{% else %}Lets {{ person.first_name }} see their own reading and chart, and nothing else.{% endif %}</p>
+      {% endif %}
+    </div>
+    <div class="setting-actions">
+      {% if person.share_hash %}
+      <form method="post" action="/p/{{ person.id }}/share"><button class="text-button">New link</button></form>
+      <form method="post" action="/p/{{ person.id }}/share/off"><button class="text-button">Turn off</button></form>
+      {% else %}
+      <form method="post" action="/p/{{ person.id }}/share"><button class="text-button">Make a link</button></form>
+      {% endif %}
+    </div>
   </div>
-  {% else %}
-  <p class="muted">Make a link {% if person.is_owner %}to view your reading without the password{% else %}for {{ person.first_name }} to see their own daily reading and chart{% endif %}. No password needed, and it shows nothing else.</p>
-  <div class="actions">
-    <form method="post" action="/p/{{ person.id }}/share"><button class="btn">Make a private link</button></form>
+
+  <div class="setting">
+    <p class="setting-name">Birth details and home city</p>
+    <div class="setting-actions"><a class="text-button" href="/p/{{ person.id }}/edit">Edit</a></div>
+  </div>
+
+  {% if not person.is_owner %}
+  <div class="setting">
+    <p class="setting-name">Remove {{ person.first_name }}</p>
+    <div class="setting-actions">
+      <form method="post" action="/p/{{ person.id }}/delete" onsubmit='return confirm({{ ("Remove " ~ person.first_name ~ " and all of their readings?")|tojson }})'>
+        <button class="text-button danger">Remove</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if protected %}
+  <div class="setting">
+    <p class="setting-name">Sign out of Skycast</p>
+    <div class="setting-actions"><form method="post" action="/logout"><button class="text-button">Sign out</button></form></div>
   </div>
   {% endif %}
 </section>
-
-<div class="actions">
-  <a class="btn btn-ghost" href="/p/{{ person.id }}/edit">Edit details</a>
-  {% if not person.is_owner %}
-  <form method="post" action="/p/{{ person.id }}/delete" onsubmit='return confirm({{ ("Remove " ~ person.first_name ~ " and all of their readings?")|tojson }})'>
-    <button class="btn btn-ghost danger">Remove</button>
-  </form>
-  {% endif %}
-  {% if protected %}
-  <form method="post" action="/logout"><button class="btn btn-ghost">Sign out</button></form>
-  {% endif %}
-</div>
 {% endif %}
 {% endblock %}

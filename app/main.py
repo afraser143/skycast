@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
-from . import nature, readings, sky, weather
+from . import astro, nature, readings, sky, weather
 from .db import Person, Reading, make_engine, new_share_link, person_for_token, session_factory
 from .wheel import chart_svg
 
@@ -371,6 +371,10 @@ def _chart(request: Request, db: Session, person: Person, base: str, **extra):
         wheel=chart_svg(chart),
         person=person,
         born=datetime.fromisoformat(person.birth_local),
+        signs=astro.SIGNS,
+        sign_glyphs=astro.SIGN_GLYPHS,
+        ordinal=nature.ordinal,
+        meaning=nature.placement_meaning,
         base=base,
         tab="chart",
         sky=sky_for_person(db, person),
