@@ -124,3 +124,22 @@ def test_bad_setup_input(client):
         "/setup/confirm", data={"birth_local": "1990-05-04T09:30", "birth_choice": "junk", "home_choice": "junk"}
     )
     assert r.status_code == 400
+
+
+def test_search_outage_is_reported_as_an_outage_not_a_missing_place(client):
+    def down(q):
+        raise weather.SearchUnavailable("429 Too Many Requests")
+
+    app.state.search_places = down
+    login(client)
+    r = client.post(
+        "/setup",
+        data={
+            "birth_date": "1990-05-04",
+            "birth_time": "09:30",
+            "birth_place": "Barrington, IL",
+            "home_city": "Austin",
+        },
+    )
+    assert "answering right now" in r.text
+    assert "Couldn't find" not in r.text

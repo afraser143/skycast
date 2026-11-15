@@ -184,7 +184,11 @@ def setup_search(
         return render(request, "setup.html", profile=db.get(Profile, 1), error="Check the birth year.", form=form)
 
     search = request.app.state.search_places
-    birth_matches, home_matches = search(birth_place), search(home_city)
+    try:
+        birth_matches, home_matches = search(birth_place), search(home_city)
+    except weather.SearchUnavailable:
+        error = "The place lookup service isn't answering right now. Wait a minute and try again."
+        return render(request, "setup.html", profile=db.get(Profile, 1), error=error, form=form)
     if not birth_matches or not home_matches:
         missing = "birth place" if not birth_matches else "home city"
         error = f"Couldn't find that {missing}. Try adding the state or country."

@@ -205,8 +205,13 @@ def rank_places(places: list[Place], name: str, qualifiers: list[str], count: in
     return out[:count]
 
 
+class SearchUnavailable(Exception):
+    """The place-search service didn't answer, as opposed to answering with no matches."""
+
+
 def search_places(query: str, count: int = 5) -> list[Place]:
-    """Looks up a city by name. Each match comes with its timezone, which the birth chart needs."""
+    """Looks up a city by name. Each match comes with its timezone, which the birth chart needs.
+    Raises SearchUnavailable if the service can't be reached or refuses (e.g. rate-limited)."""
     name, qualifiers = split_query(query.strip())
     if len(name) < 2:
         return []
@@ -217,5 +222,6 @@ def search_places(query: str, count: int = 5) -> list[Place]:
         response.raise_for_status()
         return rank_places(parse_places(response.json()), name, qualifiers, count)
     except (httpx.HTTPError, ValueError) as err:
-        log.warning("[weather] place search failed: %s", err)
-        return []
+        detail = err.response.text[:200] if isinstance(err, httpx.HTTPStatusError) else ""
+        log.warning("[weather] place search failed: %s %s", err, detail)
+        raise SearchUnavailable(str(err)) from err
