@@ -141,3 +141,41 @@ def test_split_query_expands_abbreviations():
     assert weather.split_query("Austin, TX") == ("Austin", ["texas"])
     assert weather.split_query("London, UK") == ("London", ["united kingdom"])
     assert weather.split_query("Paris") == ("Paris", [])
+
+
+def _fake_geocoder(known: dict[str, str]):
+    """Answers like the real service: whole-name matches only."""
+    calls = []
+
+    def geocode(name):
+        calls.append(name)
+        # The real service ignores case.
+        known_lower = {k.lower(): v for k, v in known.items()}
+        return weather.parse_places(load(known_lower[name.lower()])) if name.lower() in known_lower else []
+
+    return geocode, calls
+
+
+@pytest.mark.parametrize("query", ["Barrington Illinois", "Barrington IL", "barrington illinois USA", "Barrington, IL"])
+def test_finds_a_town_typed_with_its_state_and_no_comma(query):
+    geocode, calls = _fake_geocoder({"Barrington": "geocode_barrington.json"})
+    places = weather.search_places(query, geocode=geocode)
+    assert places[0].label == "Barrington, Illinois, United States"
+    assert places[0].tz == "America/Chicago"
+    assert calls[-1].lower() == "barrington" and len(calls) <= 4
+
+
+def test_saint_spelling():
+    assert weather.split_query("St.Louis")[0] == "St. Louis"
+    assert weather.split_query("st Louis, MO") == ("St. Louis", ["missouri"])
+    assert weather.split_query("Stockholm")[0] == "Stockholm"
+    assert weather.split_query("Stanford")[0] == "Stanford"
+
+
+def test_multi_word_qualifiers():
+    assert weather.name_candidates("St.Louis Missouri USA")[2] == ("St. Louis", ["missouri", "united states"])
+
+
+def test_no_match_anywhere_returns_nothing():
+    geocode, calls = _fake_geocoder({})
+    assert weather.search_places("Nowhereville Illinois", geocode=geocode) == []

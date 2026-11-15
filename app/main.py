@@ -12,7 +12,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -263,6 +263,13 @@ def chart_page(request: Request, profile: Profile = Depends(require_profile)):
 @app.get("/history", response_class=HTMLResponse)
 def history_page(request: Request, _profile: Profile = Depends(require_profile), db: Session = Depends(get_db)):
     return render(request, "history.html", days=readings.history(db), tab="history")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+@app.get("/favicon.png", include_in_schema=False)
+def favicon() -> FileResponse:
+    # Browsers ask for these at the site root regardless of the <link rel="icon"> tag.
+    return FileResponse(HERE / "static" / "icon-192.png", media_type="image/png")
 
 
 @app.get("/healthz")

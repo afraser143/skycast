@@ -143,3 +143,9 @@ def test_search_outage_is_reported_as_an_outage_not_a_missing_place(client):
     )
     assert "answering right now" in r.text
     assert "Couldn't find" not in r.text
+
+
+def test_favicon_is_served_without_signing_in(client):
+    for path in ("/favicon.ico", "/favicon.png"):
+        r = client.get(path)
+        assert r.status_code == 200 and r.headers["content-type"] == "image/png"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import asdict, dataclass
 from datetime import date
 
@@ -175,16 +176,33 @@ US_STATES = {
 COUNTRY_ALIASES = {"USA": "United States", "US": "United States", "UK": "United Kingdom"}
 
 
+def _expand(qualifier: str) -> str:
+    q = qualifier.strip().strip(".")
+    return (US_STATES.get(q.upper()) or COUNTRY_ALIASES.get(q.upper()) or q).lower()
+
+
 def split_query(query: str) -> tuple[str, list[str]]:
     """'Austin, TX' -> ('Austin', ['texas']): the city name, plus qualifiers to rank matches with."""
     name, *rest = [part.strip() for part in query.split(",")]
-    qualifiers = []
-    for q in rest:
-        if not q:
-            continue
-        expanded = US_STATES.get(q.upper()) or COUNTRY_ALIASES.get(q.upper()) or q
-        qualifiers.append(expanded.lower())
-    return name, qualifiers
+    return _fix_saint(name), [_expand(q) for q in rest if q.strip()]
+
+
+def _fix_saint(name: str) -> str:
+    """'St.Louis' and 'St Louis' -> 'St. Louis', the spelling the geocoder knows."""
+    return re.sub(r"^st(?:\.\s*|\s+)(?=\w)", "St. ", name, flags=re.IGNORECASE)
+
+
+def name_candidates(query: str) -> list[tuple[str, list[str]]]:
+    """Ways to read a query, best first. The geocoder only matches whole place names, so for
+    'Barrington Illinois' (no comma) it finds nothing; then try 'Barrington' ranked by 'illinois'."""
+    name, qualifiers = split_query(query)
+    candidates = [(name, qualifiers)]
+    words = name.split()
+    for k in range(len(words) - 1, 0, -1):
+        shorter = " ".join(words[:k])
+        if len(shorter) >= 2:
+            candidates.append((shorter, [_expand(w) for w in words[k:]] + qualifiers))
+    return candidates[:4]
 
 
 def rank_places(places: list[Place], name: str, qualifiers: list[str], count: int = 5) -> list[Place]:
@@ -193,7 +211,7 @@ def rank_places(places: list[Place], name: str, qualifiers: list[str], count: in
     def score(p: Place) -> tuple[int, int]:
         parts = [x.strip().lower() for x in p.label.split(",")]
         region = parts[1:]
-        hits = sum(any(r.startswith(q) for r in region) for q in qualifiers)
+        hits = sum(any(r.startswith(q) or q in r.split() for r in region) for q in qualifiers)
         exact = parts[0] == name.lower()
         return (-hits, 0 if exact else 1)
 
@@ -209,18 +227,28 @@ class SearchUnavailable(Exception):
     """The place-search service didn't answer, as opposed to answering with no matches."""
 
 
-def search_places(query: str, count: int = 5) -> list[Place]:
+def _geocode(name: str) -> list[Place]:
+    params = {"name": name, "count": 20, "language": "en", "format": "json"}
+    try:
+        response = httpx.get(GEOCODE_URL, params=params, timeout=TIMEOUT)
+    except httpx.TransportError:
+        # One retry for a dropped or slow connection (not for error responses like a 429).
+        response = httpx.get(GEOCODE_URL, params=params, timeout=TIMEOUT)
+    response.raise_for_status()
+    return parse_places(response.json())
+
+
+def search_places(query: str, count: int = 5, geocode=_geocode) -> list[Place]:
     """Looks up a city by name. Each match comes with its timezone, which the birth chart needs.
     Raises SearchUnavailable if the service can't be reached or refuses (e.g. rate-limited)."""
-    name, qualifiers = split_query(query.strip())
-    if len(name) < 2:
-        return []
     try:
-        response = httpx.get(
-            GEOCODE_URL, params={"name": name, "count": 20, "language": "en", "format": "json"}, timeout=TIMEOUT
-        )
-        response.raise_for_status()
-        return rank_places(parse_places(response.json()), name, qualifiers, count)
+        for name, qualifiers in name_candidates(query.strip()):
+            if len(name) < 2:
+                continue
+            places = geocode(name)
+            if places:
+                return rank_places(places, name, qualifiers, count)
+        return []
     except (httpx.HTTPError, ValueError) as err:
         detail = err.response.text[:200] if isinstance(err, httpx.HTTPStatusError) else ""
         log.warning("[weather] place search failed: %s %s", err, detail)

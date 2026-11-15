@@ -1,0 +1,184 @@
+{
+ "results": [
+  {
+   "name": "Barrington",
+   "latitude": 41.74066,
+   "longitude": -71.30866,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Rhode Island"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 42.15391,
+   "longitude": -88.13619,
+   "timezone": "America/Chicago",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Illinois"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 43.22286,
+   "longitude": -71.04701,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "New Hampshire"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 39.86484,
+   "longitude": -75.05517,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "New Jersey"
+  },
+  {
+   "name": "Barrington",
+   "latitude": -32.03333,
+   "longitude": 151.4,
+   "timezone": "Australia/Sydney",
+   "country_code": "AU",
+   "country": "Australia",
+   "admin1": "New South Wales"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 43.56285,
+   "longitude": -65.56173,
+   "timezone": "America/Halifax",
+   "country_code": "CA",
+   "country": "Canada",
+   "admin1": "Nova Scotia"
+  },
+  {
+   "name": "Barrington",
+   "latitude": -31.97257,
+   "longitude": 151.9031,
+   "timezone": "Australia/Sydney",
+   "country_code": "AU",
+   "country": "Australia",
+   "admin1": "New South Wales"
+  },
+  {
+   "name": "Barrington",
+   "latitude": -41.34555,
+   "longitude": 146.27661,
+   "timezone": "Australia/Hobart",
+   "country_code": "AU",
+   "country": "Australia",
+   "admin1": "Tasmania"
+  },
+  {
+   "name": "Barrington",
+   "latitude": -33.91218,
+   "longitude": 22.86462,
+   "timezone": "Africa/Johannesburg",
+   "country_code": "ZA",
+   "country": "South Africa",
+   "admin1": "Western Cape"
+  },
+  {
+   "name": "Barrington",
+   "latitude": -17.93889,
+   "longitude": 30.95833,
+   "timezone": "Africa/Harare",
+   "country_code": "ZW",
+   "country": "Zimbabwe",
+   "admin1": "Harare"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 52.12948,
+   "longitude": 0.03858,
+   "timezone": "Europe/London",
+   "country_code": "GB",
+   "country": "United Kingdom",
+   "admin1": "England"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 50.9596,
+   "longitude": -2.87125,
+   "timezone": "Europe/London",
+   "country_code": "GB",
+   "country": "United Kingdom",
+   "admin1": "England"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 32.59542,
+   "longitude": -83.70574,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Georgia"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 33.52039,
+   "longitude": -84.03269,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Georgia"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 39.35483,
+   "longitude": -76.46802,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Maryland"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 42.54702,
+   "longitude": -77.05608,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "New York"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 45.11004,
+   "longitude": -73.57209,
+   "timezone": "America/Toronto",
+   "country_code": "CA",
+   "country": "Canada",
+   "admin1": "Quebec"
+  },
+  {
+   "name": "Barrington",
+   "latitude": 28.0283,
+   "longitude": -82.2509,
+   "timezone": "America/New_York",
+   "country_code": "US",
+   "country": "United States",
+   "admin1": "Florida"
+  },
+  {
+   "name": "Barrington Tops",
+   "latitude": -31.94998,
+   "longitude": 151.52687,
+   "timezone": "Australia/Sydney",
+   "country_code": "AU",
+   "country": "Australia",
+   "admin1": "New South Wales"
+  },
+  {
+   "name": "Burrington",
+   "latitude": 50.93333,
+   "longitude": -3.95,
+   "timezone": "Europe/London",
+   "country_code": "GB",
+   "country": "United Kingdom",
+   "admin1": "England"
+  }
+ ]
+}
