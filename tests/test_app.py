@@ -31,7 +31,12 @@ def client(monkeypatch, tmp_path):
     def writer(facts):
         calls["writer"] += 1
         calls["prompts"].append(facts.for_prompt())
-        return horoscope.Reading(focus="Clear Signal", horoscope="The Moon is on your side today. Carry an umbrella.")
+        return horoscope.Reading(
+            focus="Clear Signal",
+            horoscope="The Moon is on your side today. Carry an umbrella.",
+            messenger="Heron",
+            messenger_message="Stand still and let what you need come to you.",
+        )
 
     def forecast(lat, lon, tz, day, fahrenheit):
         calls["forecast"].append(tz)
@@ -186,7 +191,8 @@ def test_without_ai_or_weather_today_still_works(client):
     login(client)
     me = add_person(client)
     r = client.get(f"/p/{me}")
-    assert "Built from today's sky" in r.text and "Weather was unavailable" in r.text
+    assert "Built from today's sky" in r.text and "weather was unavailable" in r.text
+    assert "Today's messenger" in r.text  # the fallback still picks a messenger
 
 
 def test_bad_input(client):
@@ -259,3 +265,52 @@ def test_upgrade_copies_the_single_user_database(tmp_path):
     sessions = session_factory(make_engine(f"sqlite:///{path}"))
     with sessions() as db:
         assert db.query(Person).count() == 1 and db.query(Reading).count() == 1
+
+
+def test_today_shows_the_messenger_and_the_living_sky(client):
+    login(client)
+    me = add_person(client)
+    r = client.get(f"/p/{me}")
+    assert "The Heron" in r.text and "Stand still and let what you need come to you." in r.text
+    assert 'data-condition="rain"' in r.text  # light rain in the forecast fixture
+    assert re.search(r'data-period="(night|dawn|day|dusk)"', r.text)
+    assert "moon-svg" in r.text
+    with app.state.sessions() as db:
+        saved = db.query(Reading).one()
+        assert saved.messenger == "Heron" and saved.facts["season"].endswith(("autumn", "winter", "spring", "summer"))
+
+
+def test_ask_again_rewrites_today_for_the_owner_only(client):
+    login(client)
+    me = add_person(client)
+    client.get(f"/p/{me}")
+    client.post(f"/p/{me}/again")
+    client.get(f"/p/{me}")
+    assert client.calls["writer"] == 2
+    token = re.search(r"/s/([^\"]+)\"", client.post(f"/p/{me}/share").text).group(1)
+    shared = TestClient(app).get(f"/s/{token}").text
+    assert "Ask again" not in shared and "/again" not in shared
+    assert TestClient(app).post(f"/p/{me}/again", follow_redirects=False).headers["location"] == "/login"
+
+
+def test_new_columns_are_added_to_an_existing_table(tmp_path):
+    """Readings saved before messengers existed: the table gains the columns and old rows still load."""
+    path = tmp_path / "before.db"
+    con = sqlite3.connect(path)
+    con.executescript(
+        """
+        CREATE TABLE people (id INTEGER PRIMARY KEY, name VARCHAR(40), is_owner BOOLEAN, birth_utc DATETIME,
+            birth_local VARCHAR(32), birth_label VARCHAR(200), birth_lat FLOAT, birth_lon FLOAT, birth_tz VARCHAR(64),
+            home_label VARCHAR(200), home_lat FLOAT, home_lon FLOAT, home_tz VARCHAR(64), fahrenheit BOOLEAN,
+            share_hash VARCHAR(64), share_created DATETIME, created_at DATETIME);
+        CREATE TABLE person_readings (person_id INTEGER, day DATE, focus VARCHAR(80), horoscope TEXT,
+            source VARCHAR(16), facts JSON, created_at DATETIME, PRIMARY KEY (person_id, day));
+        INSERT INTO person_readings VALUES (1, '2026-11-14', 'Old', 'One. Two.', 'ai', '{}', '2026-11-14 12:00:00');
+        """
+    )
+    con.commit()
+    con.close()
+    sessions = session_factory(make_engine(f"sqlite:///{path}"))
+    with sessions() as db:
+        old = db.query(Reading).one()
+        assert old.focus == "Old" and old.messenger is None

@@ -2,14 +2,29 @@
 {% set aspect_words = {"conjunction": "meets", "sextile": "sextile", "square": "square", "trine": "trine", "opposition": "opposite"} %}
 {% block content %}
 <header class="today-head">
-  <p class="eyebrow">{{ reading.day.strftime("%A, %B %-d") }}</p>
-  <p class="moonline"><span class="moon" aria-hidden="true">{{ facts.moon_emoji }}</span>{{ facts.moon_phase }} in {{ facts.moon_sign }}</p>
+  <p class="eyebrow">{{ reading.day.strftime("%A, %B %-d") }}{% if facts.season %} · {{ facts.season }}{% endif %}</p>
+  <div class="moon-wrap">{{ sky.moon_svg|safe }}</div>
+  <p class="moonline">{{ facts.moon_phase }} in {{ facts.moon_sign }}</p>
 </header>
 
 <article class="reading">
   <p class="focus">{{ reading.focus }}</p>
   <p class="horoscope">{{ reading.horoscope }}</p>
+  {% if not shared %}
+  <form method="post" action="/p/{{ person.id }}/again" class="again">
+    <button class="link-button" title="Write today's reading again">↻ Ask again</button>
+  </form>
+  {% endif %}
 </article>
+
+{% if messenger %}
+<section class="card messenger" aria-label="Today's messenger">
+  <p class="section-title">Today's messenger</p>
+  <p class="messenger-name">The {{ messenger.name }}</p>
+  <p class="messenger-gift">{{ messenger.kind }} · {{ messenger.gift }}</p>
+  <p class="messenger-message">{{ reading.messenger_message }}</p>
+</section>
+{% endif %}
 
 {% if facts.weather %}
 {% set w = facts.weather %}
@@ -31,7 +46,7 @@
 {% endif %}
 
 <section class="card">
-  <h2 class="section-title">Why today</h2>
+  <h2 class="section-title">The sky behind it</h2>
   {% if facts.transits %}
   <ul class="transits">
     {% for t in facts.transits[:4] %}
@@ -43,7 +58,7 @@
     {% endfor %}
   </ul>
   {% else %}
-  <p class="muted">No close transits to your chart today: a quiet sky.</p>
+  <p class="muted">No close transits to {{ "this" if shared or not person.is_owner else "your" }} chart today: a quiet sky.</p>
   {% endif %}
   {% if facts.retrograde %}
   <p class="retro"><span aria-hidden="true">℞</span> Retrograde: {{ facts.retrograde|join(", ") }}</p>
@@ -52,6 +67,6 @@
 
 <p class="footnote">
   {% if reading.source == "ai" %}Written by Claude from today's sky, which Skycast calculates itself.{% else %}Built from today's sky, calculated by Skycast.{% endif %}
-  {% if not facts.weather %} Weather was unavailable this morning.{% endif %}
+  {% if not facts.weather %} The weather was unavailable this morning.{% endif %}
 </p>
 {% endblock %}

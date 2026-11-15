@@ -71,6 +71,8 @@ class Reading(Base):
     horoscope: Mapped[str] = mapped_column(Text)
     source: Mapped[str] = mapped_column(String(16))  # "ai" or "template"
     facts: Mapped[dict] = mapped_column(JSON)
+    messenger: Mapped[str | None] = mapped_column(String(40), default=None)
+    messenger_message: Mapped[str | None] = mapped_column(String(200), default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
 
@@ -173,6 +175,26 @@ def upgrade_from_single_user(engine: Engine) -> None:
         log.info("[upgrade] copied the single-user profile and %d readings into people/person_readings", copied)
 
 
+def add_missing_columns(engine: Engine) -> None:
+    """`create_all` makes new tables but never changes existing ones. For a column added later
+    (always nullable, so old rows stay valid), add it here. Safe to run on every start."""
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+    with engine.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            if table.name not in existing_tables:
+                continue
+            have = {c["name"] for c in inspector.get_columns(table.name)}
+            for column in table.columns:
+                if column.name in have:
+                    continue
+                if not column.nullable:
+                    raise RuntimeError(f"New column {table.name}.{column.name} must be nullable to add automatically")
+                type_sql = column.type.compile(dialect=engine.dialect)
+                conn.execute(text(f'ALTER TABLE {table.name} ADD COLUMN "{column.name}" {type_sql}'))
+                log.info("[upgrade] added column %s.%s", table.name, column.name)
+
+
 def make_engine(url: str | None = None) -> Engine:
     url = url or database_url()
     kwargs = {"pool_pre_ping": True}
@@ -181,6 +203,7 @@ def make_engine(url: str | None = None) -> Engine:
     engine = create_engine(url, **kwargs)
     # A few small tables and one owner: creating them on start-up is simpler than a migration tool.
     Base.metadata.create_all(engine)
+    add_missing_columns(engine)
     upgrade_from_single_user(engine)
     return engine
 

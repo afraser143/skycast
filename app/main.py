@@ -20,8 +20,8 @@ from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
-from . import readings, weather
-from .db import Person, make_engine, new_share_link, person_for_token, session_factory
+from . import nature, readings, sky, weather
+from .db import Person, Reading, make_engine, new_share_link, person_for_token, session_factory
 from .wheel import chart_svg
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
@@ -122,9 +122,25 @@ def shared_person(token: str, db: Session = Depends(get_db)) -> Person:
     return person
 
 
+def sky_for_person(db: Session, person: Person, reading: Reading | None = None) -> sky.SkyState:
+    """The person's sky right now: the Sun's real height at their home, and today's weather if known."""
+    reading = reading or db.get(Reading, (person.id, readings.local_today(person)))
+    facts = reading.facts if reading else {}
+    weather = facts.get("weather") or {}
+    cond = facts.get("condition") or nature.condition(weather.get("code"))
+    return sky.sky_for(datetime.now(UTC), person.home_lat, person.home_lon, cond)
+
+
+def default_sky() -> sky.SkyState:
+    """For pages that aren't about one person (sign-in, setup): a clear night with tonight's Moon."""
+    return sky.SkyState("night", "clear", sky.moon_svg(datetime.now(UTC)))
+
+
 def render(request: Request, template: str, status_code: int = 200, **context) -> HTMLResponse:
     context.setdefault("protected", bool(app_password()))
     context.setdefault("shared", False)
+    if context.get("sky") is None:
+        context["sky"] = default_sky()
     response = templates.TemplateResponse(request, template, context, status_code=status_code)
     if context["shared"]:
         # Keep share links out of search engines and out of Referer headers.
@@ -331,12 +347,22 @@ def turn_off_share_link(person: Person = Depends(get_person), db: Session = Depe
 def _today(request: Request, db: Session, person: Person, base: str, **extra):
     state = request.app.state
     reading = readings.todays_reading(db, person, state.fetch_forecast, state.writer)
+    messenger = nature.get_messenger(reading.messenger) if reading.messenger else None
     return render(
-        request, "today.html", reading=reading, facts=reading.facts, person=person, base=base, tab="today", **extra
+        request,
+        "today.html",
+        reading=reading,
+        facts=reading.facts,
+        messenger=messenger,
+        person=person,
+        base=base,
+        tab="today",
+        sky=sky_for_person(db, person, reading),
+        **extra,
     )
 
 
-def _chart(request: Request, person: Person, base: str, **extra):
+def _chart(request: Request, db: Session, person: Person, base: str, **extra):
     chart = readings.natal_chart(person)
     return render(
         request,
@@ -347,13 +373,21 @@ def _chart(request: Request, person: Person, base: str, **extra):
         born=datetime.fromisoformat(person.birth_local),
         base=base,
         tab="chart",
+        sky=sky_for_person(db, person),
         **extra,
     )
 
 
 def _history(request: Request, db: Session, person: Person, base: str, **extra):
     return render(
-        request, "history.html", days=readings.history(db, person), person=person, base=base, tab="history", **extra
+        request,
+        "history.html",
+        days=readings.history(db, person),
+        person=person,
+        base=base,
+        tab="history",
+        sky=sky_for_person(db, person),
+        **extra,
     )
 
 
@@ -368,9 +402,16 @@ def person_today(request: Request, person: Person = Depends(get_person), db: Ses
     return _today(request, db, person, f"/p/{person.id}", people=everyone(db))
 
 
+@app.post("/p/{person_id}/again")
+def ask_again(person: Person = Depends(get_person), db: Session = Depends(get_db)):
+    """Owner only: rewrite today's reading (for example, after changing the voice)."""
+    readings.forget_today(db, person)
+    return RedirectResponse(f"/p/{person.id}", status_code=303)
+
+
 @app.get("/p/{person_id}/chart", response_class=HTMLResponse)
 def person_chart(request: Request, person: Person = Depends(get_person), db: Session = Depends(get_db)):
-    return _chart(request, person, f"/p/{person.id}", people=everyone(db))
+    return _chart(request, db, person, f"/p/{person.id}", people=everyone(db))
 
 
 @app.get("/p/{person_id}/history", response_class=HTMLResponse)
@@ -384,8 +425,8 @@ def shared_today(request: Request, token: str, person: Person = Depends(shared_p
 
 
 @app.get("/s/{token}/chart", response_class=HTMLResponse)
-def shared_chart(request: Request, token: str, person: Person = Depends(shared_person)):
-    return _chart(request, person, f"/s/{token}", shared=True)
+def shared_chart(request: Request, token: str, person: Person = Depends(shared_person), db: Session = Depends(get_db)):
+    return _chart(request, db, person, f"/s/{token}", shared=True)
 
 
 @app.get("/s/{token}/history", response_class=HTMLResponse)

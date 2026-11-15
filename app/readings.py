@@ -47,6 +47,8 @@ def facts_to_json(facts: horoscope.DayFacts) -> dict:
         ],
         "retrograde": facts.retrograde,
         "weather": facts.weather.as_dict() if facts.weather else None,
+        "season": facts.season,
+        "condition": facts.condition,
     }
 
 
@@ -65,7 +67,7 @@ def todays_reading(
     # Midday local time stands in for "today": the Moon's position at noon is a fair average.
     noon = datetime.combine(day, time(12), tzinfo=ZoneInfo(person.home_tz))
     weather = fetch_forecast(person.home_lat, person.home_lon, person.home_tz, day, person.fahrenheit)
-    facts = horoscope.day_facts(natal_chart(person), noon, weather)
+    facts = horoscope.day_facts(natal_chart(person), noon, weather, lat=person.home_lat)
     reading, source = horoscope.write_reading(facts, writer)
 
     row = Reading(
@@ -75,6 +77,8 @@ def todays_reading(
         horoscope=reading.horoscope,
         source=source,
         facts=facts_to_json(facts),
+        messenger=reading.messenger,
+        messenger_message=reading.messenger_message,
     )
     session.add(row)
     try:
@@ -84,6 +88,12 @@ def todays_reading(
         session.rollback()
         return session.get(Reading, (person.id, day))
     return row
+
+
+def forget_today(session: Session, person: Person, now: datetime | None = None) -> None:
+    """Deletes today's saved reading so the next visit writes a fresh one ("Ask again")."""
+    session.query(Reading).filter(Reading.person_id == person.id, Reading.day == local_today(person, now)).delete()
+    session.commit()
 
 
 def history(session: Session, person: Person, limit: int = 60) -> list[Reading]:

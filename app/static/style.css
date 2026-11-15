@@ -1,54 +1,184 @@
+/* Skycast: every page sits under the person's real sky. The sky sets the tone (dark or light),
+   and the tone sets the colours, so text stays readable at noon and at midnight. */
+
+@font-face {
+  font-family: "Cormorant";
+  src: url("/static/fonts/cormorant-garamond-latin-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cormorant";
+  src: url("/static/fonts/cormorant-garamond-latin-600-normal.woff2") format("woff2");
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cormorant";
+  src: url("/static/fonts/cormorant-garamond-latin-500-italic.woff2") format("woff2");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
-  --bg: #f6f1ea;
-  --bg-glow: #efe4f3;
-  --card: #fffdf9;
-  --ink: #241f3a;
-  --ink-soft: #625b78;
-  --line: #e4dcd0;
-  --accent: #6b4fc9;
-  --accent-ink: #ffffff;
-  --gold: #a87508;
-  --error: #b42318;
-  --fire: #f7ddd5;
-  --earth: #e4ecd6;
-  --air: #f2ecd0;
-  --water: #d9e6f2;
-  --display: "New York", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --display: "Cormorant", "Iowan Old Style", Georgia, serif;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --fire: rgba(255, 128, 96, 0.22);
+  --earth: rgba(138, 190, 112, 0.22);
+  --air: rgba(245, 214, 120, 0.24);
+  --water: rgba(108, 160, 232, 0.24);
+}
+
+body[data-tone="dark"] {
+  --ink: #f4f0ff;
+  --ink-soft: rgba(236, 231, 255, 0.72);
+  --card: rgba(18, 16, 46, 0.42);
+  --card-solid: #171538;
+  --line: rgba(255, 255, 255, 0.14);
+  --accent: #cdbcff;
+  --accent-ink: #17132f;
+  --gold: #f3cc6b;
+  --error: #ff9a8a;
+  --shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+  --bar: rgba(14, 12, 38, 0.72);
+  color-scheme: dark;
+}
+
+body[data-tone="light"] {
+  --ink: #1d1932;
+  --ink-soft: rgba(29, 25, 50, 0.7);
+  --card: rgba(255, 255, 255, 0.5);
+  --card-solid: #f7f4ee;
+  --line: rgba(29, 25, 50, 0.13);
+  --accent: #553ab8;
+  --accent-ink: #ffffff;
+  --gold: #8a5b00;
+  --error: #a3211a;
+  --shadow: 0 1px 10px rgba(255, 255, 255, 0.55);
+  --bar: rgba(255, 255, 255, 0.72);
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1024;
-    --bg-glow: #221a4a;
-    --card: #191a36;
-    --ink: #ece8ff;
-    --ink-soft: #a9a3c9;
-    --line: #2d2c55;
-    --accent: #b9a6ff;
-    --accent-ink: #15122e;
-    --gold: #f1c45c;
-    --error: #ff8a7a;
-    --fire: #3d2232;
-    --earth: #22332c;
-    --air: #383322;
-    --water: #1f2c45;
-    color-scheme: dark;
-  }
-}
-
 * { box-sizing: border-box; }
-
 html, body { margin: 0; }
 
 body {
-  background: radial-gradient(120% 60% at 50% 0%, var(--bg-glow), var(--bg) 70%) fixed, var(--bg);
   color: var(--ink);
+  background: #0d1030;
   font: 17px/1.5 var(--sans);
   -webkit-font-smoothing: antialiased;
   min-height: 100dvh;
 }
+
+/* ---- The sky ---------------------------------------------------------------- */
+
+.sky { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--sky, #0d1030); }
+.sky > div { position: absolute; inset: 0; }
+
+body[data-period="night"] { --sky: linear-gradient(180deg, #060920 0%, #10153a 50%, #221f4c 100%); }
+body[data-period="dawn"] { --sky: linear-gradient(180deg, #2e3266 0%, #8f6a8f 45%, #e9a98f 80%, #f6d2a6 100%); }
+body[data-period="day"] { --sky: linear-gradient(180deg, #4f9bd6 0%, #8cc3ea 45%, #d9ecf8 100%); }
+body[data-period="dusk"] { --sky: linear-gradient(180deg, #17184a 0%, #4e3b7a 40%, #b4607a 75%, #f09a6b 100%); }
+
+/* Weather mutes the sky. */
+body[data-period="day"][data-condition="partly"] { --sky: linear-gradient(180deg, #6fa7d4 0%, #a9cbe5 50%, #e1ecf3 100%); }
+body[data-period="day"][data-condition="cloudy"] { --sky: linear-gradient(180deg, #8e9aa8 0%, #b9c2cc 50%, #dde2e7 100%); }
+body[data-period="day"][data-condition="rain"] { --sky: linear-gradient(180deg, #6c7887 0%, #9aa5b1 50%, #c8ced5 100%); }
+body[data-period="day"][data-condition="fog"] { --sky: linear-gradient(180deg, #b9bec4 0%, #d6d9dc 50%, #ebedee 100%); }
+body[data-period="day"][data-condition="snow"] { --sky: linear-gradient(180deg, #b3c2d0 0%, #d7e0e8 50%, #f2f5f8 100%); }
+body[data-period="dawn"]:is([data-condition="cloudy"], [data-condition="rain"], [data-condition="fog"], [data-condition="snow"]) {
+  --sky: linear-gradient(180deg, #4a4f6b 0%, #7e7a8f 50%, #b8a8a8 100%);
+}
+body[data-period="dusk"]:is([data-condition="cloudy"], [data-condition="rain"], [data-condition="fog"], [data-condition="snow"]) {
+  --sky: linear-gradient(180deg, #1c1f38 0%, #3b3d5c 50%, #6d6680 100%);
+}
+body[data-period="night"]:is([data-condition="cloudy"], [data-condition="rain"], [data-condition="fog"], [data-condition="snow"]) {
+  --sky: linear-gradient(180deg, #0b0e1b 0%, #171c2c 55%, #262b3c 100%);
+}
+body[data-condition="storm"] { --sky: linear-gradient(180deg, #181b26 0%, #2c303d 50%, #474c5a 100%); }
+
+/* Sun or moon glow. */
+.sky-glow { background: radial-gradient(60% 40% at 78% 6%, rgba(255, 244, 214, 0.55), transparent 70%); }
+body[data-period="night"] .sky-glow { background: radial-gradient(45% 30% at 50% 10%, rgba(214, 206, 255, 0.16), transparent 70%); }
+body[data-period="dusk"] .sky-glow, body[data-period="dawn"] .sky-glow {
+  background: radial-gradient(80% 35% at 50% 100%, rgba(255, 196, 140, 0.45), transparent 70%);
+}
+body:is([data-condition="cloudy"], [data-condition="rain"], [data-condition="fog"], [data-condition="storm"]) .sky-glow { opacity: 0.35; }
+
+/* Stars: two layers of tiny dots that breathe at different speeds. */
+.stars {
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 18%, #fff, transparent),
+    radial-gradient(1px 1px at 28% 62%, #fff, transparent),
+    radial-gradient(1.4px 1.4px at 44% 12%, #fff, transparent),
+    radial-gradient(1px 1px at 63% 34%, #fff, transparent),
+    radial-gradient(1.3px 1.3px at 81% 22%, #fff, transparent),
+    radial-gradient(1px 1px at 91% 71%, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 7% 83%, #fff, transparent),
+    radial-gradient(1px 1px at 55% 88%, #fff, transparent);
+  background-size: 260px 260px;
+  opacity: 0.8;
+  animation: twinkle 6s ease-in-out infinite;
+}
+.stars-far {
+  background-size: 170px 190px;
+  background-position: 40px 70px;
+  opacity: 0.45;
+  animation-duration: 9s;
+  animation-delay: -3s;
+}
+@keyframes twinkle { 50% { opacity: 0.25; } }
+
+/* Clouds: soft drifting banks. */
+.clouds {
+  background:
+    radial-gradient(40% 14% at 20% 14%, rgba(255, 255, 255, 0.28), transparent 70%),
+    radial-gradient(50% 16% at 75% 26%, rgba(255, 255, 255, 0.22), transparent 70%),
+    radial-gradient(45% 12% at 40% 42%, rgba(255, 255, 255, 0.14), transparent 70%);
+  filter: blur(6px);
+  animation: drift 60s linear infinite alternate;
+}
+body[data-tone="dark"] .clouds { opacity: 0.45; }
+@keyframes drift { to { transform: translateX(8%); } }
+
+/* Rain: fine slanted streaks. */
+.rain {
+  background-image: repeating-linear-gradient(105deg, transparent 0 14px, rgba(255, 255, 255, 0.22) 14px 15px, transparent 15px 34px);
+  background-size: 120px 120px;
+  opacity: 0.5;
+  animation: fall 0.7s linear infinite;
+}
+@keyframes fall { to { background-position: -30px 120px; } }
+
+/* Snow: drifting flakes. */
+.snow {
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, #fff, transparent),
+    radial-gradient(2.5px 2.5px at 60% 70%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 80% 20%, #fff, transparent),
+    radial-gradient(2px 2px at 40% 85%, #fff, transparent);
+  background-size: 140px 140px;
+  opacity: 0.85;
+  animation: snowfall 9s linear infinite;
+}
+@keyframes snowfall { to { background-position: 30px 140px; } }
+
+/* Fog: slow horizontal veils. */
+.fog {
+  background:
+    linear-gradient(180deg, transparent 20%, rgba(255, 255, 255, 0.35) 45%, transparent 60%),
+    linear-gradient(180deg, transparent 55%, rgba(255, 255, 255, 0.3) 75%, transparent 95%);
+  animation: drift 40s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sky * { animation: none !important; }
+}
+
+/* ---- Layout ------------------------------------------------------------------ */
 
 .page {
   max-width: 560px;
@@ -61,28 +191,55 @@ a { color: var(--accent); }
 h1, h2, p { margin: 0; }
 .muted { color: var(--ink-soft); }
 .hint { color: var(--ink-soft); font-size: 14px; font-weight: 400; }
-.display { font-family: var(--display); font-weight: 600; font-size: 34px; letter-spacing: -0.01em; }
-.eyebrow { color: var(--ink-soft); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
-.section-title { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 10px; }
+.display { font-family: var(--display); font-weight: 600; font-size: 40px; line-height: 1.1; letter-spacing: 0.005em; }
+.eyebrow { color: var(--ink-soft); font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+.section-title { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 10px; font-weight: 600; }
 
 .card {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: 22px;
   padding: 16px;
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+section.card + section.card, .card + section.card { margin-top: 14px; }
+
+/* ---- Today ------------------------------------------------------------------- */
+
+.today-head { text-align: center; margin: 4px 0 18px; }
+.moon-wrap { width: 108px; margin: 14px auto 8px; filter: drop-shadow(0 0 18px rgba(255, 246, 214, 0.35)); }
+.moon-svg { display: block; width: 100%; height: auto; }
+.moon-dark { fill: rgba(30, 32, 66, 0.85); }
+.moon-halo { fill: rgba(255, 250, 222, 0.1); }
+/* By day the Moon's shadow side all but disappears into the blue, as it does in the real sky. */
+body[data-tone="light"] .moon-dark { fill: rgba(255, 255, 255, 0.1); }
+body[data-tone="light"] .moon-halo { fill: none; }
+.moonline { font-family: var(--display); font-size: 20px; font-weight: 600; }
+
+.reading { text-align: center; margin-bottom: 26px; text-shadow: var(--shadow); }
+.focus { color: var(--gold); font-family: var(--display); font-style: italic; font-size: 22px; margin-bottom: 8px; }
+.horoscope { font-family: var(--display); font-size: 27px; line-height: 1.38; font-weight: 500; text-wrap: pretty; }
+.again { margin-top: 14px; }
+.link-button {
+  font: 600 14px var(--sans);
+  color: var(--ink);
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
 }
 
-/* ---- Today ---- */
-.today-head { text-align: center; margin: 8px 0 22px; }
-.moonline { margin-top: 6px; font-weight: 600; }
-.moon { margin-right: 6px; }
-.reading { text-align: center; margin-bottom: 26px; }
-.focus { color: var(--gold); font-family: var(--display); font-style: italic; font-size: 19px; margin-bottom: 10px; }
-.horoscope { font-family: var(--display); font-size: 24px; line-height: 1.45; text-wrap: pretty; }
+.messenger { text-align: center; margin-bottom: 14px; }
+.messenger-name { font-family: var(--display); font-size: 30px; font-weight: 600; line-height: 1.1; }
+.messenger-gift { color: var(--ink-soft); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; margin: 4px 0 10px; }
+.messenger-message { font-family: var(--display); font-style: italic; font-size: 21px; line-height: 1.35; }
 
-.weather { margin-bottom: 14px; }
 .weather-main { display: flex; align-items: center; gap: 14px; }
-.weather-emoji { font-size: 40px; line-height: 1; }
+.weather-emoji { font-size: 38px; line-height: 1; }
 .temp { font-size: 24px; font-weight: 700; }
 .weather-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0 0; }
 .weather-facts div { text-align: center; }
@@ -94,20 +251,41 @@ h1, h2, p { margin: 0; }
 .transits small { display: block; }
 .glyphs { min-width: 64px; color: var(--accent); font-size: 18px; white-space: nowrap; }
 .retro { margin-top: 12px; color: var(--ink-soft); font-size: 15px; }
-.footnote { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top: 18px; }
-section.card + section.card { margin-top: 14px; }
+.footnote { text-align: center; color: var(--ink-soft); font-size: 13px; margin-top: 18px; text-shadow: var(--shadow); }
 
-/* ---- Chart ---- */
-.page-head { margin-bottom: 18px; }
-.page-head .muted { margin-top: 4px; }
+/* ---- People ------------------------------------------------------------------ */
+
+.people { display: flex; gap: 8px; overflow-x: auto; margin: -4px -16px 14px; padding: 0 16px 4px; scrollbar-width: none; }
+.people::-webkit-scrollbar { display: none; }
+.people a {
+  flex: none;
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+}
+.people a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.people a.add { color: var(--accent); }
+.for-whom { text-align: center; color: var(--gold); font-family: var(--display); font-size: 20px; font-weight: 600; text-shadow: var(--shadow); }
+
+/* ---- Chart ------------------------------------------------------------------- */
+
+.page-head { margin-bottom: 18px; text-shadow: var(--shadow); }
+.page-head .muted { margin-top: 6px; }
 .back { display: inline-block; margin-bottom: 8px; font-weight: 600; text-decoration: none; }
 .big-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
 .big-three .card { padding: 12px 8px; text-align: center; }
-.big-three .label { display: block; font-size: 12px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.08em; }
-.big-three .value { font-family: var(--display); font-size: 19px; font-weight: 600; }
+.big-three .label { display: block; font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.12em; }
+.big-three .value { font-family: var(--display); font-size: 23px; font-weight: 600; }
 .wheel-card { margin: 0 0 14px; padding: 10px; }
 .wheel { display: block; width: 100%; height: auto; }
-.wheel-bg { fill: var(--card); }
+.wheel-bg { fill: transparent; }
 .sign-slice { stroke: var(--line); stroke-width: 1; }
 .sign-glyph { font-size: 15px; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
 .ring { fill: none; stroke: var(--line); stroke-width: 1.2; }
@@ -119,22 +297,29 @@ section.card + section.card { margin-top: 14px; }
 
 .placements { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .placements th, .placements td { text-align: left; padding: 7px 4px; border-top: 1px solid var(--line); font-weight: 400; }
-.placements thead th { border-top: 0; font-size: 12px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; }
+.placements thead th { border-top: 0; font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.1em; }
 .placements td:last-child, .placements th:last-child { text-align: right; }
 .placements .glyph { display: inline-block; width: 26px; color: var(--accent); }
 .placements abbr { text-decoration: none; color: var(--gold); }
 
 .actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
 .actions form { margin: 0; }
+.share p { margin-bottom: 4px; }
+.share .actions { justify-content: flex-start; margin-top: 12px; }
+.danger { color: var(--error) !important; }
 
-/* ---- History ---- */
+/* ---- History ----------------------------------------------------------------- */
+
 .history { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
-.history-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.history .focus { margin-bottom: 4px; font-size: 17px; }
+.history-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.history-messenger { font-family: var(--display); font-style: italic; color: var(--ink-soft); }
+.history .focus { margin-bottom: 4px; font-size: 20px; }
+.history-text { font-family: var(--display); font-size: 20px; line-height: 1.4; }
 
-/* ---- Forms ---- */
-.center-card { text-align: center; padding-top: 12vh; display: grid; gap: 10px; }
-.center-card form { text-align: left; margin-top: 16px; }
+/* ---- Forms ------------------------------------------------------------------- */
+
+.center-card { text-align: center; padding-top: 12vh; display: grid; gap: 10px; text-shadow: var(--shadow); }
+.center-card form { text-align: left; margin-top: 16px; text-shadow: none; }
 .logo { font-size: 44px; color: var(--gold); }
 .stack { display: grid; gap: 14px; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -146,7 +331,7 @@ input[type="text"], input:not([type]), input[type="password"], input[type="date"
   padding: 11px 12px;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: var(--bg);
+  background: var(--card-solid);
   color: var(--ink);
   -webkit-appearance: none;
   appearance: none;
@@ -172,9 +357,10 @@ legend { font-weight: 700; padding: 0 4px; }
   text-align: center;
   cursor: pointer;
 }
-.btn-ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+.btn-ghost { background: var(--card); color: var(--accent); border: 1px solid var(--line); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 
-/* ---- Tabs ---- */
+/* ---- Tabs -------------------------------------------------------------------- */
+
 .tabs {
   position: fixed;
   left: 0;
@@ -183,9 +369,9 @@ legend { font-weight: 700; padding: 0 4px; }
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   padding: 8px 8px calc(env(safe-area-inset-bottom) + 8px);
-  background: color-mix(in srgb, var(--card) 88%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--bar);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
   border-top: 1px solid var(--line);
 }
 .tabs a {
@@ -202,27 +388,6 @@ legend { font-weight: 700; padding: 0 4px; }
 .tabs a[aria-current="page"] { color: var(--accent); }
 
 @media (max-width: 360px) {
-  .horoscope { font-size: 21px; }
+  .horoscope { font-size: 24px; }
   .weather-facts { grid-template-columns: repeat(2, 1fr); }
 }
-
-/* ---- People ---- */
-.people { display: flex; gap: 8px; overflow-x: auto; margin: -4px -16px 18px; padding: 0 16px 4px; scrollbar-width: none; }
-.people::-webkit-scrollbar { display: none; }
-.people a {
-  flex: none;
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--card);
-  color: var(--ink);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 15px;
-}
-.people a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.people a.add { color: var(--accent); }
-.for-whom { text-align: center; color: var(--gold); font-weight: 700; margin-bottom: 4px; }
-.share p { margin-bottom: 4px; }
-.share .actions { justify-content: flex-start; margin-top: 12px; }
-.danger { color: var(--error); }

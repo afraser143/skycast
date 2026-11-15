@@ -6,11 +6,11 @@ Every morning Skycast calculates where the planets actually are, finds how they 
 
 I can add other people too: each gets their own chart, their own city's weather and their own daily reading, and I can send them a private link that shows only theirs.
 
-| Today | Chart | Light mode |
-|---|---|---|
-| ![Today, dark mode](docs/screenshots/today-dark.png) | ![Birth chart wheel](docs/screenshots/chart-dark.png) | ![Today, light mode](docs/screenshots/today-light.png) |
+| Night, clear | Day, rain | Dusk | Chart |
+|---|---|---|---|
+| ![Today under a clear night sky](docs/screenshots/night-clear.png) | ![Today on a rainy day](docs/screenshots/day-rain.png) | ![Today at dusk](docs/screenshots/dusk-partly.png) | ![Birth chart wheel](docs/screenshots/chart-night.png) |
 
-<sub>Screenshots use sample birth details. These show the built-in reading from a run without an API key and with the weather service rate-limited, so you can see how the app degrades.</sub>
+<sub>Screenshots use sample birth details, and the built-in fallback reading (no API key in the screenshot environment). The sky was forced to each time of day and weather for the screenshots; in the app it follows the real Sun and forecast.</sub>
 
 ## How it works
 
@@ -28,6 +28,12 @@ home city ──────────────► forecast (Open-Meteo) �
 4. **Claude only writes.** It receives the facts (the big three, the Moon's sign and phase, the top three transits, retrogrades, the forecast) and is told to use nothing else. The output is a typed Pydantic model, and code checks it is 2–3 sentences before it is shown.
 5. **One reading per day**, saved, so every visit that day shows the same reading and a history builds up.
 
+### The voice, the messenger and the living sky
+
+- **An earth-wise voice.** Each reading starts with something you can see or feel outside (the rain, the light, the season, the Moon) and draws its meaning inward. The season (for example, "mid autumn") is calculated from the Sun's longitude and flipped for the southern hemisphere. The voice draws on the shared language of nature and the elements, and the prompt explicitly avoids borrowing the terms or practices of particular spiritual or Indigenous traditions.
+- **A nature messenger.** Each day names one creature, plant, tree or stone from a curated list of 24, each with a gift (the Heron for patience, Moss for quiet persistence). The structured output's schema restricts Claude to that list, so it can't invent one. Without AI, the code picks one that fits both the weather and the strongest transit, stable for the day.
+- **A living sky.** The page background is that person's sky right now. Night, dawn, day or dusk comes from the Sun's actual altitude at their home (civil twilight at ±6°); the forecast adds clouds, rain, snow, fog or stars; and the Moon is drawn as an SVG at its real phase, lit on the correct side for each hemisphere. Text colors switch between dark-sky and light-sky sets so it stays readable, and the animation stops for anyone who has reduced motion turned on.
+
 ## Design decisions
 
 - **Astronomy is tested against astronomy.** The Sun must sit at 0° Aries at each March equinox and 0° Cancer at the June solstice. The Ascendant is checked with an *independent* calculation: convert it to altitude and azimuth and confirm it lies on the eastern horizon. The Midheaven must lie on the meridian. Both are tested at four cities in both hemispheres and at the equator. Mars's 2024–25 retrograde is detected on the right dates.
@@ -37,13 +43,14 @@ home city ──────────────► forecast (Open-Meteo) �
 - **Place search that understands "Austin, TX".** The geocoder matches only on the city name, so Skycast splits off the state or country (expanding US state abbreviations) and ranks matches with it, then removes duplicates.
 - **Private share links, stored as hashes.** A link is 24 random bytes. Only its SHA-256 hash goes in the database, so the database can't reveal the link. It's shown once, can be replaced or turned off, and opens only that person's pages. Shared pages send `noindex` and `Referrer-Policy: no-referrer`, and a wrong, old or turned-off link gets the same 404.
 - **A safe schema upgrade.** Skycast started with a single person. On start-up it copies that profile and its readings into the multi-person tables once, leaving the old tables untouched. This is tested on SQLite and against real Postgres with tables created by the previous version's code.
+- **Additive schema changes without a migration tool.** New columns are always nullable, and on start-up Skycast compares each table with its model and adds any missing columns. Old rows stay valid, and a test runs it against a table from before the change.
 - **One owner, simple auth.** One password from an environment variable, compared in constant time, with a signed session cookie that lasts a year so the home-screen app stays signed in.
 
 ## Stack
 
 | | |
 |---|---|
-| Web | FastAPI, Jinja2 templates, plain CSS (light and dark), installable PWA |
+| Web | FastAPI, Jinja2 templates, plain CSS with a sky that follows the real Sun and weather, self-hosted Cormorant Garamond (OFL), installable PWA |
 | Astronomy | astronomy-engine |
 | Data | SQLAlchemy 2: Postgres (Neon) in production, SQLite locally |
 | AI | Claude via the Anthropic Python SDK, structured output with Pydantic |

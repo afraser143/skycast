@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from app import astro, horoscope, weather
+from app import astro, horoscope, nature, weather
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -54,17 +54,25 @@ def test_forecast_failure_returns_none(monkeypatch):
 BIRTH = datetime(1990, 5, 4, 14, 30, tzinfo=UTC)
 
 
+def reading(text="The rain softens the ground. Let your plans soak in.", focus="Soft Ground", **kw):
+    return horoscope.Reading(
+        focus=focus, horoscope=text, messenger=kw.get("messenger", "Heron"),
+        messenger_message=kw.get("message", "Stand still and let what you need come to you."),
+    )  # fmt: skip
+
+
 @pytest.fixture
 def facts():
     chart = astro.natal_chart(BIRTH, 30.27, -97.74)
     forecast = weather.parse_forecast(load("forecast_daily.json"), fahrenheit=True)
-    return horoscope.day_facts(chart, datetime(2026, 11, 15, 18, tzinfo=UTC), forecast)
+    return horoscope.day_facts(chart, datetime(2026, 11, 15, 18, tzinfo=UTC), forecast, lat=30.27)
 
 
-def test_prompt_carries_the_sky_and_weather_but_not_the_birth_details(facts):
+def test_prompt_carries_the_sky_season_and_weather_but_not_the_birth_details(facts):
     prompt = facts.for_prompt()
     assert "Natal big three: Sun in Taurus" in prompt
     assert "Today's Moon:" in prompt and "Local weather: light rain" in prompt
+    assert "Season where the reader lives: mid autumn" in prompt  # Nov 15: Oct 23 to Nov 22 is mid autumn
     for private in ("1990", "May 4", "14:30", "Austin", "30.27", "-97.74"):
         assert private not in prompt
 
@@ -72,6 +80,17 @@ def test_prompt_carries_the_sky_and_weather_but_not_the_birth_details(facts):
 def test_prompt_lists_only_the_strongest_transits(facts):
     lines = [line for line in facts.for_prompt().splitlines() if line.startswith("- transiting")]
     assert 0 < len(lines) <= 3 if facts.transits else lines == []
+
+
+def test_system_prompt_sets_the_voice_and_lists_every_messenger():
+    p = horoscope.SYSTEM_PROMPT
+    assert "earth-wise guide" in p and "spirit animal" in p  # the voice, and what to avoid
+    assert all(f"- {name} (" in p for name in nature.MESSENGER_NAMES)
+
+
+def test_messenger_must_come_from_the_list():
+    with pytest.raises(ValueError):
+        reading(messenger="Unicorn")
 
 
 @pytest.mark.parametrize(
@@ -85,15 +104,18 @@ def test_prompt_lists_only_the_strongest_transits(facts):
     ],
 )
 def test_reading_validation(text, ok):
-    assert (horoscope.reading_issue(horoscope.Reading(focus="Quiet Strength", horoscope=text)) is None) == ok
+    assert (horoscope.reading_issue(reading(text)) is None) == ok
+
+
+def test_messenger_message_must_be_one_short_sentence():
+    assert horoscope.reading_issue(reading(message="Be still. Then move.")) is not None
+    assert horoscope.reading_issue(reading(message="x" * 200 + ".")) is not None
 
 
 def test_good_ai_reading_is_used(facts):
-    good = horoscope.Reading(
-        focus=" Tender Rain ", horoscope="The Moon softens your Venus today. Let the rain slow you down."
-    )
-    reading, source = horoscope.write_reading(facts, lambda f: good)
-    assert source == "ai" and reading.focus == "Tender Rain"
+    good = reading(focus=" Tender Rain ", messenger="Moss")
+    result, source = horoscope.write_reading(facts, lambda f: good)
+    assert source == "ai" and result.focus == "Tender Rain" and result.messenger == "Moss"
 
 
 @pytest.mark.parametrize(
@@ -101,23 +123,59 @@ def test_good_ai_reading_is_used(facts):
     [
         None,  # no API key
         lambda f: None,  # the call failed
-        lambda f: horoscope.Reading(focus="Way Too Many Words In This Focus", horoscope="Nope."),  # bad output
+        lambda f: reading(focus="Way Too Many Words In This Focus", text="Nope."),  # bad output
     ],
 )
-def test_falls_back_to_a_template_from_the_facts(facts, writer):
-    reading, source = horoscope.write_reading(facts, writer)
+def test_falls_back_to_an_earth_wise_template(facts, writer):
+    result, source = horoscope.write_reading(facts, writer)
     assert source == "template"
-    assert horoscope.reading_issue(reading) is None
-    assert facts.moon_sign in reading.horoscope
-    assert "light rain" in reading.horoscope
+    assert horoscope.reading_issue(result) is None
+    assert result.horoscope.startswith(nature.WEATHER_WISDOM["rain"])  # light rain in the fixture
+    assert result.messenger in nature.MESSENGER_NAMES
 
 
 def test_template_without_weather_or_transits(facts):
     facts.weather = None
     facts.transits = []
-    reading = horoscope.template_reading(facts)
-    assert reading.focus == "Quiet Sky"
-    assert horoscope.reading_issue(reading) is None
+    result = horoscope.template_reading(facts)
+    assert "mid autumn" in result.horoscope and "still pond" in result.horoscope
+    assert result.focus == "Quiet Waters"
+    assert horoscope.reading_issue(result) is None
+
+
+# ---- Nature -----------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "sun_lon,lat,expected",
+    [
+        (5, 40, "early spring"),
+        (100, 40, "early summer"),
+        (235, 30, "mid autumn"),
+        (260, 30, "late autumn"),
+        (235, -33, "mid spring"),  # southern hemisphere: November is spring
+        (300, 40, "mid winter"),
+    ],
+)
+def test_seasons(sun_lon, lat, expected):
+    assert nature.season(sun_lon, lat) == expected
+
+
+def test_weather_conditions():
+    assert nature.condition(None) == "clear"
+    assert nature.condition(61) == "rain" and nature.condition(95) == "storm" and nature.condition(45) == "fog"
+
+
+def test_every_fallback_messenger_choice_is_valid_and_stable():
+    from datetime import date
+
+    for cond in nature.CONDITIONS:
+        for aspect in (*nature.ASPECT_WISDOM, None):
+            first = nature.pick_messenger(cond, aspect, date(2026, 11, 15))
+            assert first is nature.pick_messenger(cond, aspect, date(2026, 11, 15))
+            assert cond in first.conditions or aspect in first.aspects
+    rainy_square = nature.pick_messenger("rain", "square", date(2026, 11, 15))
+    assert "rain" in rainy_square.conditions and "square" in rainy_square.aspects
 
 
 @pytest.mark.parametrize(

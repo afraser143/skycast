@@ -59,6 +59,7 @@ class Forecast:
     uv_max: float | None
     sunrise: str | None  # "07:02"
     sunset: str | None
+    code: int | None = None  # WMO weather code, for the sky and the messenger
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -102,6 +103,7 @@ def parse_forecast(data: dict, fahrenheit: bool) -> Forecast:
         uv_max=first("uv_index_max"),
         sunrise=_clock(first("sunrise")),
         sunset=_clock(first("sunset")),
+        code=code,
     )
 
 

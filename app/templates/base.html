@@ -6,18 +6,26 @@
   <title>{% block title %}Skycast{% endblock %}</title>
   <meta name="description" content="A daily horoscope from a real birth chart and local weather.">
   {% if shared %}<meta name="robots" content="noindex, nofollow">{% endif %}
-  <meta name="theme-color" content="#f6f1ea" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0f1024" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="{{ '#0d1030' if sky.tone == 'dark' else '#cfe2ef' }}">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="{{ 'black-translucent' if sky.tone == 'dark' else 'default' }}">
   <meta name="apple-mobile-web-app-title" content="Skycast">
   {% if not shared %}<link rel="manifest" href="/static/manifest.webmanifest">{% endif %}
   <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+  <link rel="preload" href="/static/fonts/cormorant-garamond-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
+<body data-period="{{ sky.period }}" data-condition="{{ sky.condition }}" data-tone="{{ sky.tone }}">
+  <div class="sky" aria-hidden="true">
+    <div class="sky-glow"></div>
+    {% if sky.show_stars %}<div class="stars"></div><div class="stars stars-far"></div>{% endif %}
+    {% if sky.condition in ("partly", "cloudy", "rain", "storm", "snow") %}<div class="clouds"></div>{% endif %}
+    {% if sky.condition in ("rain", "storm") %}<div class="rain"></div>{% endif %}
+    {% if sky.condition == "snow" %}<div class="snow"></div>{% endif %}
+    {% if sky.condition == "fog" %}<div class="fog"></div>{% endif %}
+  </div>
   <main class="page {% if tab %}has-tabs{% endif %}">
     {% if people and person %}
     <nav class="people" aria-label="People">
